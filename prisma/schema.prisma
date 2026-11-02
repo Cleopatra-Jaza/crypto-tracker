@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String?
+  createdAt DateTime  @default(now())
+  holdings  Holding[]
+}
+
+model Holding {
+  id        String   @id @default(cuid())
+  coinId    String   // CoinGecko id, example: "bitcoin"
+  amount    Decimal  @db.Decimal(24, 8) // evlo coins vachirukkaanga
+  buyPrice  Decimal  @db.Decimal(24, 8) // vaangina price (USD)
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
