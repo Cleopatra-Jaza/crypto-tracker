@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useCurrency } from "@/lib/useCurrency";
+import { formatMoney } from "@/lib/currency";
 import {
   createChart,
   AreaSeries,
@@ -18,6 +20,7 @@ const RANGES = [
 
 export default function CoinDetail({ id }: { id: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [currency, setCurrency] = useCurrency();
   const [days, setDays] = useState(7);
   const [prices, setPrices] = useState<[number, number][]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +31,9 @@ export default function CoinDetail({ id }: { id: string }) {
     async function load() {
       setLoading(true);
       try {
-        const res = await fetch(`/api/coins/${id}?days=${days}`);
+        const res = await fetch(
+          `/api/coins/${id}?days=${days}&currency=${currency}`
+        );
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Failed to load");
         setPrices(data.prices);
@@ -40,7 +45,7 @@ export default function CoinDetail({ id }: { id: string }) {
       }
     }
     load();
-  }, [id, days]);
+  }, [id, days, currency]);
 
   // Chart draw
   useEffect(() => {
@@ -48,6 +53,9 @@ export default function CoinDetail({ id }: { id: string }) {
 
     const chart = createChart(containerRef.current, {
       height: 400,
+      localization: {
+        priceFormatter: (p: number) => formatMoney(p, currency),
+      },
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
         textColor: "#9ca3af",
@@ -82,7 +90,7 @@ export default function CoinDetail({ id }: { id: string }) {
     chart.timeScale().fitContent();
 
     return () => chart.remove();
-  }, [prices, days]);
+  }, [prices, days, currency]);
 
   const latest = prices.length ? prices[prices.length - 1][1] : null;
 
@@ -95,8 +103,8 @@ export default function CoinDetail({ id }: { id: string }) {
       <h1 className="mt-2 text-3xl font-bold capitalize">{id}</h1>
       {latest !== null && (
         <p className="mb-4 text-2xl">
-  ${latest.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-</p>
+          {formatMoney(latest, currency)}
+        </p>
       )}
 
       <div className="mb-4 flex gap-2">

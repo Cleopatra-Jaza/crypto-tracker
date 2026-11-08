@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useCurrency } from "@/lib/useCurrency";
+import { formatCompactMoney, formatMoney } from "@/lib/currency";
 
 type Coin = {
   id: string;
@@ -25,17 +27,13 @@ type SortKey =
   | "market_cap"
   | "total_volume";
 
-const compact = new Intl.NumberFormat("en", {
-  notation: "compact",
-  maximumFractionDigits: 2,
-});
-
 export default function Home() {
   const [coins, setCoins] = useState<Coin[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [currency, setCurrency] = useCurrency();
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [showWatchlist, setShowWatchlist] = useState(false);
@@ -47,7 +45,15 @@ export default function Home() {
 
   const prevPricesRef = useRef<Record<string, number>>({});
   const timeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const prevCurrencyRef = useRef<string>(currency);
   const [flash, setFlash] = useState<Record<string, "up" | "down">>({});
+
+  useEffect(() => {
+    if (prevCurrencyRef.current !== currency) {
+      prevPricesRef.current = {};
+      prevCurrencyRef.current = currency;
+    }
+  }, [currency]);
 
   useEffect(() => {
     const prev = prevPricesRef.current;
@@ -95,7 +101,7 @@ export default function Home() {
 
   async function loadCoins() {
     try {
-      const res = await fetch("/api/coins");
+      const res = await fetch(`/api/coins?currency=${currency}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load");
       setCoins(data);
@@ -111,7 +117,7 @@ export default function Home() {
     loadCoins();
     const timer = setInterval(loadCoins, 60000);
     return () => clearInterval(timer);
-  }, []);
+  }, [currency]);
 
   async function loadWatchlist() {
     try {
@@ -437,7 +443,7 @@ export default function Home() {
                         : ""
                     }`}
                   >
-                    ${coin.current_price.toLocaleString()}
+                    {formatMoney(coin.current_price, currency)}
                   </td>
                   <td
                     className={`p-3 text-right ${
@@ -469,14 +475,10 @@ export default function Home() {
                     {pct30 == null ? "-" : `${pct30.toFixed(2)}%`}
                   </td>
                   <td className="p-3 text-right hidden md:table-cell">
-                    {coin.market_cap == null
-                      ? "-"
-                      : compact.format(coin.market_cap)}
+                    {formatCompactMoney(coin.market_cap, currency)}
                   </td>
                   <td className="p-3 text-right hidden md:table-cell">
-                    {coin.total_volume == null
-                      ? "-"
-                      : compact.format(coin.total_volume)}
+                    {formatCompactMoney(coin.total_volume, currency)}
                   </td>
                 </tr>
               );

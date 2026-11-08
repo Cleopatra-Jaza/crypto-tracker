@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import "./globals.css";
 import AuthButton from "@/components/AuthButton";
+import CurrencySelect from "@/components/CurrencySelect";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const geistSans = Geist({
@@ -46,6 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <AuthButton />
         </Suspense>
         <ThemeToggle />
+        <CurrencySelect />
       </header>
       {children}
     </body>

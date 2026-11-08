@@ -36,3 +36,22 @@ export function formatMoney(
     return `${value}`;
   }
 }
+
+export function formatCompactMoney(
+  value: number | null | undefined,
+  code: string
+): string {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return "-";
+  }
+  try {
+    return new Intl.NumberFormat("en", {
+      style: "currency",
+      currency: code.toUpperCase(),
+      notation: "compact",
+      maximumFractionDigits: 2,
+    }).format(value);
+  } catch {
+    return `${value}`;
+  }
+}
