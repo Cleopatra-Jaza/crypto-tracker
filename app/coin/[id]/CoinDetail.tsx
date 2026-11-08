@@ -7,6 +7,7 @@ import { formatMoney, formatCompactMoney } from "@/lib/currency";
 import {
   createChart,
   AreaSeries,
+  CandlestickSeries,
   ColorType,
   UTCTimestamp,
 } from "lightweight-charts";
@@ -15,6 +16,7 @@ const RANGES = [
   { label: "1D", days: 1 },
   { label: "7D", days: 7 },
   { label: "30D", days: 30 },
+  { label: "90D", days: 90 },
   { label: "1Y", days: 365 },
 ];
 
@@ -38,7 +40,9 @@ export default function CoinDetail({ id }: { id: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currency, setCurrency] = useCurrency();
   const [days, setDays] = useState(7);
+  const [chartType, setChartType] = useState<"line" | "candles">("line");
   const [prices, setPrices] = useState<[number, number][]>([]);
+  const [candles, setCandles] = useState<[number, number, number, number, number][]>([]);
   const [details, setDetails] = useState<{
     name: string | null;
     symbol: string | null;
@@ -68,8 +72,10 @@ export default function CoinDetail({ id }: { id: string }) {
   const [error, setError] = useState("");
   const [expanded, setExpanded] = useState(false);
 
-  // Data load
+  // Data load (line)
   useEffect(() => {
+    if (chartType !== "line") return;
+    let cancelled = false;
     async function load() {
       setLoading(true);
       try {
@@ -78,16 +84,46 @@ export default function CoinDetail({ id }: { id: string }) {
         );
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Failed to load");
-        setPrices(data.prices);
-        setError("");
+        if (!cancelled) {
+          setPrices(data.prices);
+          setError("");
+        }
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Something went wrong");
+        if (!cancelled) setError(e instanceof Error ? e.message : "Something went wrong");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     load();
-  }, [id, days, currency]);
+    return () => { cancelled = true; };
+  }, [id, days, currency, chartType]);
+
+  // Data load (candles)
+  useEffect(() => {
+    if (chartType !== "candles") return;
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `/api/coins/${encodeURIComponent(id)}/ohlc?days=${days}&currency=${currency}`,
+          { cache: "no-store" }
+        );
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to load");
+        if (!cancelled) {
+          setCandles(data.candles);
+          setError("");
+        }
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Something went wrong");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [id, days, currency, chartType]);
 
   // Details load
   useEffect(() => {
@@ -114,7 +150,9 @@ export default function CoinDetail({ id }: { id: string }) {
 
   // Chart draw
   useEffect(() => {
-    if (!containerRef.current || prices.length === 0) return;
+    if (!containerRef.current) return;
+    if (chartType === "line" && prices.length === 0) return;
+    if (chartType === "candles" && candles.length === 0) return;
 
     const chart = createChart(containerRef.current, {
       height: 400,
@@ -132,29 +170,54 @@ export default function CoinDetail({ id }: { id: string }) {
       timeScale: { timeVisible: days <= 7 },
     });
 
-    const series = chart.addSeries(AreaSeries, {
-      lineColor: "#22c55e",
-      topColor: "rgba(34,197,94,0.4)",
-      bottomColor: "rgba(34,197,94,0)",
-    });
-
-    const seen = new Set<number>();
-    const data = prices
-      .map(([ms, price]) => ({
-        time: Math.floor(ms / 1000) as UTCTimestamp,
-        value: price,
-      }))
-      .filter((p) => {
-        if (seen.has(p.time)) return false;
-        seen.add(p.time);
-        return true;
+    if (chartType === "line") {
+      const series = chart.addSeries(AreaSeries, {
+        lineColor: "#22c55e",
+        topColor: "rgba(34,197,94,0.4)",
+        bottomColor: "rgba(34,197,94,0)",
       });
+      const seen = new Set<number>();
+      const data = prices
+        .map(([ms, price]) => ({
+          time: Math.floor(ms / 1000) as UTCTimestamp,
+          value: price,
+        }))
+        .filter((p) => {
+          if (seen.has(p.time)) return false;
+          seen.add(p.time);
+          return true;
+        });
+      series.setData(data);
+    } else {
+      const series = chart.addSeries(CandlestickSeries, {
+        upColor: "#22c55e",
+        downColor: "#ef4444",
+        borderVisible: false,
+        wickUpColor: "#22c55e",
+        wickDownColor: "#ef4444",
+      });
+      const seen = new Set<number>();
+      const data = candles
+        .map(([ms, open, high, low, close]) => ({
+          time: Math.floor(ms / 1000) as UTCTimestamp,
+          open,
+          high,
+          low,
+          close,
+        }))
+        .sort((a, b) => (a.time as number) - (b.time as number))
+        .filter((p) => {
+          if (seen.has(p.time as number)) return false;
+          seen.add(p.time as number);
+          return true;
+        });
+      series.setData(data);
+    }
 
-    series.setData(data);
     chart.timeScale().fitContent();
 
     return () => chart.remove();
-  }, [prices, days, currency]);
+  }, [prices, candles, days, currency, chartType]);
 
   const latest = prices.length ? prices[prices.length - 1][1] : null;
   const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 2 });
@@ -249,6 +312,28 @@ export default function CoinDetail({ id }: { id: string }) {
             {r.label}
           </button>
         ))}
+        <div className="ml-2 flex gap-1">
+          <button
+            onClick={() => setChartType("line")}
+            className={`rounded-lg border px-4 py-2 ${
+              chartType === "line"
+                ? "border-green-500 bg-green-500 text-black"
+                : "border-gray-500"
+            }`}
+          >
+            Line
+          </button>
+          <button
+            onClick={() => setChartType("candles")}
+            className={`rounded-lg border px-4 py-2 ${
+              chartType === "candles"
+                ? "border-green-500 bg-green-500 text-black"
+                : "border-gray-500"
+            }`}
+          >
+            Candles
+          </button>
+        </div>
       </div>
 
       {loading ? (
