@@ -11,7 +11,24 @@ type Coin = {
   current_price: number;
   price_change_percentage_24h: number;
   market_cap: number;
+  market_cap_rank: number | null;
+  total_volume: number | null;
+  price_change_percentage_7d_in_currency: number | null;
+  price_change_percentage_30d_in_currency: number | null;
 };
+
+type SortKey =
+  | "name"
+  | "current_price"
+  | "price_change_percentage_24h"
+  | "price_change_percentage_7d_in_currency"
+  | "market_cap"
+  | "total_volume";
+
+const compact = new Intl.NumberFormat("en", {
+  notation: "compact",
+  maximumFractionDigits: 2,
+});
 
 export default function Home() {
   const [coins, setCoins] = useState<Coin[]>([]);
@@ -22,6 +39,9 @@ export default function Home() {
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [showWatchlist, setShowWatchlist] = useState(false);
+
+  const [sortKey, setSortKey] = useState<SortKey>("market_cap");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   async function loadCoins() {
     try {
@@ -65,6 +85,15 @@ export default function Home() {
     );
   }
 
+  function handleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "desc" ? "asc" : "desc"));
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
+  }
+
   const filtered = coins.filter((c) => {
     const matchSearch =
       c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -72,6 +101,25 @@ export default function Home() {
     const matchWatch = !showWatchlist || watchlist.includes(c.id);
     return matchSearch && matchWatch;
   });
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (sortKey === "name") {
+      const cmp = a.name.localeCompare(b.name);
+      return sortDir === "asc" ? cmp : -cmp;
+    }
+    const an = (a[sortKey] as number | null) ?? 0;
+    const bn = (b[sortKey] as number | null) ?? 0;
+    return sortDir === "asc" ? an - bn : bn - an;
+  });
+
+  function arrow(key: SortKey) {
+    if (sortKey !== key) return "";
+    return sortDir === "desc" ? " ↓" : " ↑";
+  }
+
+  function headerClass(extra?: string) {
+    return `p-3 cursor-pointer select-none ${extra ?? ""}`;
+  }
 
   return (
     <main className="mx-auto max-w-4xl p-6">
@@ -122,15 +170,53 @@ export default function Home() {
             <tr className="border-b border-gray-500">
               <th className="p-3"></th>
               <th className="p-3">#</th>
-              <th className="p-3">Coin</th>
-              <th className="p-3 text-right">Price</th>
-              <th className="p-3 text-right">24h</th>
+              <th
+                className={headerClass()}
+                onClick={() => handleSort("name")}
+              >
+                Coin{arrow("name")}
+              </th>
+              <th
+                className={headerClass("text-right")}
+                onClick={() => handleSort("current_price")}
+              >
+                Price{arrow("current_price")}
+              </th>
+              <th
+                className={headerClass("text-right")}
+                onClick={() => handleSort("price_change_percentage_24h")}
+              >
+                24h{arrow("price_change_percentage_24h")}
+              </th>
+              <th
+                className={headerClass("text-right hidden md:table-cell")}
+                onClick={() =>
+                  handleSort("price_change_percentage_7d_in_currency")
+                }
+              >
+                7d{arrow("price_change_percentage_7d_in_currency")}
+              </th>
+              <th className="p-3 text-right hidden md:table-cell">30d</th>
+              <th
+                className={headerClass("text-right hidden md:table-cell")}
+                onClick={() => handleSort("market_cap")}
+              >
+                Market cap{arrow("market_cap")}
+              </th>
+              <th
+                className={headerClass("text-right hidden md:table-cell")}
+                onClick={() => handleSort("total_volume")}
+              >
+                Volume{arrow("total_volume")}
+              </th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((coin) => {
+            {sorted.map((coin) => {
               const change = coin.price_change_percentage_24h ?? 0;
               const starred = watchlist.includes(coin.id);
+              const pct7 = coin.price_change_percentage_7d_in_currency;
+              const pct30 = coin.price_change_percentage_30d_in_currency;
               return (
                 <tr key={coin.id} className="border-b border-gray-700">
                   <td className="p-3">
@@ -142,7 +228,7 @@ export default function Home() {
                       {starred ? "⭐" : "☆"}
                     </button>
                   </td>
-                  <td className="p-3">{coins.indexOf(coin) + 1}</td>
+                  <td className="p-3">{coin.market_cap_rank ?? "-"}</td>
                   <td className="p-3">
                     <div className="flex items-center gap-3">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -167,6 +253,38 @@ export default function Home() {
                     }`}
                   >
                     {change.toFixed(2)}%
+                  </td>
+                  <td
+                    className={`p-3 text-right hidden md:table-cell ${
+                      pct7 == null
+                        ? ""
+                        : pct7 >= 0
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }`}
+                  >
+                    {pct7 == null ? "-" : `${pct7.toFixed(2)}%`}
+                  </td>
+                  <td
+                    className={`p-3 text-right hidden md:table-cell ${
+                      pct30 == null
+                        ? ""
+                        : pct30 >= 0
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }`}
+                  >
+                    {pct30 == null ? "-" : `${pct30.toFixed(2)}%`}
+                  </td>
+                  <td className="p-3 text-right hidden md:table-cell">
+                    {coin.market_cap == null
+                      ? "-"
+                      : compact.format(coin.market_cap)}
+                  </td>
+                  <td className="p-3 text-right hidden md:table-cell">
+                    {coin.total_volume == null
+                      ? "-"
+                      : compact.format(coin.total_volume)}
                   </td>
                 </tr>
               );
