@@ -17,6 +17,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   holdings      Holding[]
+  watchlist     WatchlistItem[]
 }
 
 model Account {
@@ -62,5 +63,16 @@ model Holding {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+}
+
+model WatchlistItem {
+  id        String   @id @default(cuid())
+  coinId    String
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, coinId])
   @@index([userId])
 }
