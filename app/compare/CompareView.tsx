@@ -168,9 +168,13 @@ export default function CompareView() {
   }, [coinA, coinB, days, currency, retry, nameA, nameB]);
 
   useEffect(() => {
-    if (!chartRef.current || pricesA.length === 0 || pricesB.length === 0) return;
+    if (!chartRef.current) return;
+    if (pricesA.length < 2 || pricesB.length < 2) return;
+    if (coinA === coinB) return;
     const chart = createChart(chartRef.current, {
+      width: chartRef.current.clientWidth,
       height: 400,
+      autoSize: true,
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
         textColor: "#9ca3af",
@@ -184,15 +188,19 @@ export default function CompareView() {
       },
       timeScale: { timeVisible: days <= 7 },
     });
+    const seriesA = toPercentSeries(pricesA);
+    const seriesB = toPercentSeries(pricesB);
+    console.log("[compare chart] points A:", seriesA.length, "points B:", seriesB.length);
     const sA = chart.addSeries(LineSeries, { color: "#22c55e", lineWidth: 2 });
     const sB = chart.addSeries(LineSeries, { color: "#3b82f6", lineWidth: 2 });
-    sA.setData(toPercentSeries(pricesA));
-    sB.setData(toPercentSeries(pricesB));
+    sA.setData(seriesA);
+    sB.setData(seriesB);
     chart.timeScale().fitContent();
     return () => chart.remove();
-  }, [pricesA, pricesB, days]);
+  }, [pricesA, pricesB, days, currency, coinA, coinB]);
 
   const sameCoin = coinA === coinB;
+  const hasChartData = pricesA.length >= 2 && pricesB.length >= 2 && !sameCoin && !error && !loading;
 
   const rows: { label: string; key: keyof Details; type: "money" | "compactMoney" | "percent" | "supply" }[] = [
     { label: "Price", key: "price", type: "money" },
@@ -247,33 +255,36 @@ export default function CompareView() {
         ))}
       </div>
 
-      {loading ? (
-        <div className="h-[400px] w-full animate-pulse rounded bg-gray-700" />
-      ) : error ? (
-        <div className="mb-4">
-          <p className="mb-2 text-red-500">{error}</p>
-          <button
-            onClick={() => setRetry((r) => r + 1)}
-            className="rounded-lg border border-gray-500 px-4 py-2"
-          >
-            Try again
-          </button>
+      {hasChartData && (
+        <div className="mb-2 flex gap-4 text-sm">
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-3 w-3 rounded-full bg-green-500" />
+            {nameA}
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-3 w-3 rounded-full bg-blue-500" />
+            {nameB}
+          </span>
         </div>
-      ) : !sameCoin && pricesA.length > 0 && pricesB.length > 0 ? (
-        <>
-          <div className="mb-2 flex gap-4 text-sm">
-            <span className="flex items-center gap-1">
-              <span className="inline-block h-3 w-3 rounded-full bg-green-500" />
-              {nameA}
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="inline-block h-3 w-3 rounded-full bg-blue-500" />
-              {nameB}
-            </span>
+      )}
+
+      <div className="relative w-full" style={{ height: 400 }}>
+        <div ref={chartRef} className="h-full w-full" />
+        {loading && !sameCoin && (
+          <div className="absolute inset-0 animate-pulse rounded bg-gray-700" />
+        )}
+        {error && !loading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded bg-gray-800/90">
+            <p className="text-red-500">{error}</p>
+            <button
+              onClick={() => setRetry((r) => r + 1)}
+              className="rounded-lg border border-gray-500 px-4 py-2"
+            >
+              Try again
+            </button>
           </div>
-          <div ref={chartRef} className="w-full" />
-        </>
-      ) : null}
+        )}
+      </div>
 
       {!loading && !error && !sameCoin && (detailsA || detailsB) && (
         <div className="mt-6 overflow-x-auto">
