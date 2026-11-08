@@ -115,10 +115,11 @@ export default function CoinDetail({ id }: { id: string }) {
         ))}
       </div>
 
-      {loading && <p>Loading chart...</p>}
+      {loading && (
+        <div className="h-[400px] w-full animate-pulse rounded bg-gray-700" />
+      )}
       {error && <p className="text-red-500">Error: {error}</p>}
-
-      <div ref={containerRef} className="w-full" />
+      {!loading && <div ref={containerRef} className="w-full" />}
     </main>
   );
 }

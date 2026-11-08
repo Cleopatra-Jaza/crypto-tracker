@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 type Coin = {
@@ -42,6 +42,54 @@ export default function Home() {
 
   const [sortKey, setSortKey] = useState<SortKey>("market_cap");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  const prevPricesRef = useRef<Record<string, number>>({});
+  const timeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const [flash, setFlash] = useState<Record<string, "up" | "down">>({});
+
+  useEffect(() => {
+    const prev = prevPricesRef.current;
+    const newFlash: Record<string, "up" | "down"> = {};
+    let hasFlash = false;
+    coins.forEach((c) => {
+      const p = prev[c.id];
+      if (p !== undefined && p !== c.current_price) {
+        newFlash[c.id] = c.current_price > p ? "up" : "down";
+        hasFlash = true;
+      }
+    });
+
+    const next: Record<string, number> = {};
+    coins.forEach((c) => {
+      next[c.id] = c.current_price;
+    });
+    prevPricesRef.current = next;
+
+    if (!hasFlash) return;
+
+    Object.keys(newFlash).forEach((id) => {
+      if (timeoutsRef.current[id]) clearTimeout(timeoutsRef.current[id]);
+    });
+
+    setFlash((f) => ({ ...f, ...newFlash }));
+
+    Object.keys(newFlash).forEach((id) => {
+      timeoutsRef.current[id] = setTimeout(() => {
+        setFlash((f) => {
+          const copy = { ...f };
+          delete copy[id];
+          return copy;
+        });
+        delete timeoutsRef.current[id];
+      }, 1000);
+    });
+  }, [coins]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(timeoutsRef.current).forEach(clearTimeout);
+    };
+  }, []);
 
   async function loadCoins() {
     try {
@@ -156,7 +204,48 @@ export default function Home() {
         className="mb-4 w-full rounded-lg border border-gray-400 bg-transparent p-3"
       />
 
-      {loading && <p>Loading...</p>}
+      {loading ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <tbody>
+              {Array.from({ length: 10 }).map((_, i) => (
+                <tr key={i} className="border-b border-gray-700">
+                  <td className="p-3">
+                    <div className="h-5 w-5 animate-pulse rounded bg-gray-700" />
+                  </td>
+                  <td className="p-3">
+                    <div className="h-4 w-6 animate-pulse rounded bg-gray-700" />
+                  </td>
+                  <td className="p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-6 w-6 animate-pulse rounded-full bg-gray-700" />
+                      <div className="h-4 w-24 animate-pulse rounded bg-gray-700" />
+                    </div>
+                  </td>
+                  <td className="p-3 text-right">
+                    <div className="ml-auto h-4 w-16 animate-pulse rounded bg-gray-700" />
+                  </td>
+                  <td className="p-3 text-right">
+                    <div className="ml-auto h-4 w-12 animate-pulse rounded bg-gray-700" />
+                  </td>
+                  <td className="p-3 text-right hidden md:table-cell">
+                    <div className="ml-auto h-4 w-12 animate-pulse rounded bg-gray-700" />
+                  </td>
+                  <td className="p-3 text-right hidden md:table-cell">
+                    <div className="ml-auto h-4 w-12 animate-pulse rounded bg-gray-700" />
+                  </td>
+                  <td className="p-3 text-right hidden md:table-cell">
+                    <div className="ml-auto h-4 w-16 animate-pulse rounded bg-gray-700" />
+                  </td>
+                  <td className="p-3 text-right hidden md:table-cell">
+                    <div className="ml-auto h-4 w-16 animate-pulse rounded bg-gray-700" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
       {error && <p className="text-red-500">Error: {error}</p>}
       {showWatchlist && watchlist.length === 0 && (
         <p className="text-gray-400">
@@ -164,6 +253,7 @@ export default function Home() {
         </p>
       )}
 
+      {!loading && (
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
@@ -244,7 +334,15 @@ export default function Home() {
                       </span>
                     </div>
                   </td>
-                  <td className="p-3 text-right">
+                  <td
+                    className={`p-3 text-right transition-colors duration-500 ${
+                      flash[coin.id] === "up"
+                        ? "bg-green-500/20 text-green-500"
+                        : flash[coin.id] === "down"
+                        ? "bg-red-500/20 text-red-500"
+                        : ""
+                    }`}
+                  >
                     ${coin.current_price.toLocaleString()}
                   </td>
                   <td
@@ -292,6 +390,7 @@ export default function Home() {
           </tbody>
         </table>
       </div>
+      )}
     </main>
   );
 }
