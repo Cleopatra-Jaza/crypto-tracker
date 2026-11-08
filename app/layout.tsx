@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 import Link from "next/link";
@@ -18,8 +19,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  applicationName: "Crypto Tracker",
   title: "Crypto Tracker",
   description: "Live crypto prices, interactive charts, watchlist and portfolio tracker",
+  appleWebApp: {
+    capable: true,
+    title: "Crypto Tracker",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/192", sizes: "192x192", type: "image/png" },
+      { url: "/icons/512", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/192", sizes: "192x192", type: "image/png" }],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0a0a0a",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
