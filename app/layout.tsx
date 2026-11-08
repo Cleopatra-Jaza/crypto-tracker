@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import "./globals.css";
 import AuthButton from "@/components/AuthButton";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,8 +25,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||(t===null&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();",
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
       <header className="flex items-center justify-between border-b border-gray-200 px-4 py-2">
         <div className="flex items-center gap-4">
@@ -35,6 +45,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Suspense fallback={null}>
           <AuthButton />
         </Suspense>
+        <ThemeToggle />
       </header>
       {children}
     </body>
