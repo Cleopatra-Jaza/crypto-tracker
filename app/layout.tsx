@@ -42,6 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <div className="flex items-center gap-4">
           <Link href="/">Crypto Tracker</Link>
           <Link href="/portfolio">Portfolio</Link>
+          <Link href="/compare">Compare</Link>
         </div>
         <Suspense fallback={null}>
           <AuthButton />
