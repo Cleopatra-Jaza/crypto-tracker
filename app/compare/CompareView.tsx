@@ -59,6 +59,21 @@ function fmt(v: unknown, currency: string, type: "money" | "compactMoney" | "per
   }
 }
 
+async function fetchJson(url: string, coinName: string, label: string, signal: AbortSignal): Promise<unknown> {
+  const res = await fetch(url, { signal, cache: "no-store" });
+  let data: unknown = null;
+  try {
+    data = await res.json();
+  } catch {}
+  if (!res.ok) {
+    const errText = typeof (data as { error?: string } | null)?.error === "string"
+      ? (data as { error: string }).error
+      : res.statusText;
+    throw new Error(`Failed to load ${label} for ${coinName} (HTTP ${res.status}: ${errText})`);
+  }
+  return data;
+}
+
 export default function CompareView() {
   const [currency] = useCurrency();
   const [coins, setCoins] = useState<Coin[]>([]);
@@ -75,13 +90,20 @@ export default function CompareView() {
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch("/api/coins")
+    let cancelled = false;
+    fetch("/api/coins", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data)) setCoins(data.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })));
+        if (!cancelled && Array.isArray(data)) {
+          setCoins(data.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })));
+        }
       })
       .catch(() => {});
+    return () => { cancelled = true; };
   }, []);
+
+  const nameA = coins.find((c) => c.id === coinA)?.name ?? coinA;
+  const nameB = coins.find((c) => c.id === coinB)?.name ?? coinB;
 
   useEffect(() => {
     if (coinA === coinB) return;
@@ -96,31 +118,43 @@ export default function CompareView() {
 
     async function load() {
       try {
-        const r1 = await fetch(`/api/coins/${coinA}?days=${days}&currency=${currency}`, { signal: controller.signal });
-        if (!r1.ok) throw new Error("Failed to load chart for Coin A");
-        const d1 = await r1.json();
+        const d1 = await fetchJson(
+          `/api/coins/${encodeURIComponent(coinA)}?days=${days}&currency=${encodeURIComponent(currency)}`,
+          nameA, "chart", controller.signal
+        ) as { prices?: unknown };
         if (ignore) return;
-        setPricesA(d1.prices ?? []);
+        if (!Array.isArray(d1.prices) || d1.prices.length < 2) {
+          throw new Error(`No chart data for ${nameA} in this range`);
+        }
+        setPricesA(d1.prices as [number, number][]);
 
-        const r2 = await fetch(`/api/coins/${coinB}?days=${days}&currency=${currency}`, { signal: controller.signal });
-        if (!r2.ok) throw new Error("Failed to load chart for Coin B");
-        const d2 = await r2.json();
+        const d2 = await fetchJson(
+          `/api/coins/${encodeURIComponent(coinB)}?days=${days}&currency=${encodeURIComponent(currency)}`,
+          nameB, "chart", controller.signal
+        ) as { prices?: unknown };
         if (ignore) return;
-        setPricesB(d2.prices ?? []);
+        if (!Array.isArray(d2.prices) || d2.prices.length < 2) {
+          throw new Error(`No chart data for ${nameB} in this range`);
+        }
+        setPricesB(d2.prices as [number, number][]);
 
-        const r3 = await fetch(`/api/coins/${coinA}/details?currency=${currency}`, { signal: controller.signal });
-        if (!r3.ok) throw new Error("Failed to load details for Coin A");
-        const d3 = await r3.json();
+        const d3 = await fetchJson(
+          `/api/coins/${encodeURIComponent(coinA)}/details?currency=${encodeURIComponent(currency)}`,
+          nameA, "details", controller.signal
+        );
         if (ignore) return;
-        setDetailsA(d3);
+        setDetailsA(d3 as Details);
 
-        const r4 = await fetch(`/api/coins/${coinB}/details?currency=${currency}`, { signal: controller.signal });
-        if (!r4.ok) throw new Error("Failed to load details for Coin B");
-        const d4 = await r4.json();
+        const d4 = await fetchJson(
+          `/api/coins/${encodeURIComponent(coinB)}/details?currency=${encodeURIComponent(currency)}`,
+          nameB, "details", controller.signal
+        );
         if (ignore) return;
-        setDetailsB(d4);
+        setDetailsB(d4 as Details);
       } catch (e) {
-        if (ignore || (e instanceof DOMException && e.name === "AbortError")) return;
+        if (ignore) return;
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        console.error(e);
         setError(e instanceof Error ? e.message : "Something went wrong");
       } finally {
         if (!ignore) setLoading(false);
@@ -131,7 +165,7 @@ export default function CompareView() {
       ignore = true;
       controller.abort();
     };
-  }, [coinA, coinB, days, currency, retry]);
+  }, [coinA, coinB, days, currency, retry, nameA, nameB]);
 
   useEffect(() => {
     if (!chartRef.current || pricesA.length === 0 || pricesB.length === 0) return;
@@ -159,8 +193,6 @@ export default function CompareView() {
   }, [pricesA, pricesB, days]);
 
   const sameCoin = coinA === coinB;
-  const nameA = coins.find((c) => c.id === coinA)?.name ?? coinA;
-  const nameB = coins.find((c) => c.id === coinB)?.name ?? coinB;
 
   const rows: { label: string; key: keyof Details; type: "money" | "compactMoney" | "percent" | "supply" }[] = [
     { label: "Price", key: "price", type: "money" },
