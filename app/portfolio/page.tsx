@@ -182,6 +182,90 @@ export default function PortfolioPage() {
     percent: totalValue > 0 ? (v.value / totalValue) * 100 : 0,
   }));
 
+  function csvCell(t: unknown): string {
+    const s = String(t ?? "");
+    let out = s.replace(/"/g, '""');
+    if (/^[=+\-@]/.test(s)) out = "'" + out;
+    return '"' + out + '"';
+  }
+
+  function exportCSV() {
+    if (holdings.length === 0) return;
+    const lines: string[] = [];
+    const header = [
+      "Coin",
+      "Symbol",
+      "Amount",
+      "Buy price (USD)",
+      "Current price (USD)",
+      "Current value (USD)",
+      "Profit/Loss (USD)",
+      "Profit/Loss (%)",
+    ];
+    lines.push(header.map((c) => csvCell(c)).join(","));
+
+    for (const r of rows) {
+      const h = r.holding;
+      if (!r.available) {
+        lines.push(
+          [
+            csvCell(h.coinId),
+            csvCell(""),
+            csvCell(String(h.amount)),
+            csvCell(String(h.buyPrice.toFixed(2))),
+            csvCell(""),
+            csvCell(""),
+            csvCell(""),
+            csvCell(""),
+          ].join(",")
+        );
+        continue;
+      }
+      const coin = r.coin as Coin;
+      const currentValue = r.currentValue as number;
+      const profit = r.profit as number;
+      const profitPercent = r.profitPercent as number;
+      lines.push(
+        [
+          csvCell(coin.name),
+          csvCell(coin.symbol),
+          csvCell(String(h.amount)),
+          csvCell(String(h.buyPrice.toFixed(2))),
+          csvCell(String(coin.current_price.toFixed(2))),
+          csvCell(String(currentValue.toFixed(2))),
+          csvCell(String(profit.toFixed(2))),
+          csvCell(String(profitPercent.toFixed(2))),
+        ].join(",")
+      );
+    }
+
+    const d = new Date();
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    lines.push(
+      [
+        csvCell("Total"),
+        csvCell(""),
+        csvCell(""),
+        csvCell(""),
+        csvCell(""),
+        csvCell(String(totalValue.toFixed(2))),
+        csvCell(String(totalProfit.toFixed(2))),
+        csvCell(""),
+      ].join(",")
+    );
+
+    const csv = "\uFEFF" + lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `crypto-portfolio-${dateStr}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <main className="mx-auto max-w-4xl p-6">
       <h1 className="mb-4 text-3xl font-bold">Portfolio</h1>
@@ -246,6 +330,13 @@ export default function PortfolioPage() {
           </span>
           ${money(totalProfit)}
         </p>
+        <button
+          onClick={exportCSV}
+          disabled={holdings.length === 0}
+          className="rounded-lg border border-gray-500 px-4 py-2"
+        >
+          Export CSV
+        </button>
       </div>
 
       <div className="overflow-x-auto">
