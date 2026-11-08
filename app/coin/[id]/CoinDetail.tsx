@@ -166,17 +166,27 @@ export default function CoinDetail({ id }: { id: string }) {
       case "change24h":
       case "change7d":
       case "change30d":
-      case "change1y":
-        return v == null ? "-" : `${(v as number).toFixed(2)}%`;
+      case "change1y": {
+        const n = typeof v === "number" && Number.isFinite(v) ? v : null;
+        return n == null ? "-" : `${n.toFixed(2)}%`;
+      }
       case "athDate":
-      case "atlDate":
-        return v == null ? "-" : new Date(v as string).toLocaleDateString();
+      case "atlDate": {
+        const s = typeof v === "string" ? v : null;
+        if (s == null) return "-";
+        const date = new Date(s);
+        return isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
+      }
       case "circulatingSupply":
       case "totalSupply":
-      case "maxSupply":
-        return v == null ? "-" : compact.format(v as number);
-      default:
-        return formatCompactMoney(v as number | null, currency);
+      case "maxSupply": {
+        const n = typeof v === "number" && Number.isFinite(v) ? v : null;
+        return n == null ? "-" : compact.format(n);
+      }
+      default: {
+        const n = typeof v === "number" && Number.isFinite(v) ? v : null;
+        return formatCompactMoney(n, currency);
+      }
     }
   }
 
@@ -187,9 +197,10 @@ export default function CoinDetail({ id }: { id: string }) {
       key === "change30d" ||
       key === "change1y"
     ) {
-      const v = details?.[key as keyof typeof details] as number | null;
-      if (v == null) return "text-gray-400";
-      return v >= 0 ? "text-green-500" : "text-red-500";
+      const v = details?.[key as keyof typeof details];
+      const n = typeof v === "number" && Number.isFinite(v) ? v : null;
+      if (n == null) return "text-gray-400";
+      return n >= 0 ? "text-green-500" : "text-red-500";
     }
     return "text-gray-300";
   }
