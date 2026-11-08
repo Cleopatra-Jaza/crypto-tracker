@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useCurrency } from "@/lib/useCurrency";
 import { formatCompactMoney, formatMoney } from "@/lib/currency";
+import MarketOverview from "@/components/MarketOverview";
 
 type Coin = {
   id: string;
@@ -263,6 +264,8 @@ export default function Home() {
   return (
     <main className="mx-auto max-w-4xl p-6">
       <h1 className="mb-4 text-3xl font-bold">Crypto Tracker</h1>
+
+      <MarketOverview coins={coins} currency={currency} />
 
       <div className="mb-4 flex gap-2">
         <button
