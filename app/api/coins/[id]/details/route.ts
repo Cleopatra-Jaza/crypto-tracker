@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { isCurrency } from "@/lib/currency";
+import { cgFetch } from "@/lib/coingecko";
 
+const TTL = 600 * 1000;
+const STALE_MAX = 60 * 60 * 1000;
 const cache = new Map<string, { time: number; data: unknown }>();
-const TTL = 5 * 60 * 1000;
+const stale = new Map<string, { time: number; data: unknown }>();
 
 function num(x: unknown): number | null {
   if (typeof x === "number") return Number.isFinite(x) ? x : null;
@@ -13,6 +16,10 @@ function num(x: unknown): number | null {
   return null;
 }
 
+function staleResponse(data: unknown) {
+  return NextResponse.json(data, { headers: { "X-Cache-Stale": "1" } });
+}
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -20,23 +27,30 @@ export async function GET(
   const { id } = await params;
   const { searchParams } = new URL(req.url);
   const rawCurrency = searchParams.get("currency");
-  const currency = rawCurrency && isCurrency(rawCurrency)
-    ? rawCurrency.toLowerCase()
-    : "usd";
+  const currency =
+    rawCurrency && isCurrency(rawCurrency) ? rawCurrency.toLowerCase() : "usd";
   const key = `${id}-${currency}`;
 
   const cached = cache.get(key);
   if (cached && Date.now() - cached.time < TTL) {
     return NextResponse.json(cached.data);
   }
+  const staleEntry = stale.get(key);
+  const canUseStale = staleEntry && Date.now() - staleEntry.time < STALE_MAX;
 
   try {
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/coins/${encodeURIComponent(id)}?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false`,
-      { cache: "no-store" }
+    const res = await cgFetch(
+      `/coins/${encodeURIComponent(id)}?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false`,
+      600
     );
     if (!res.ok) {
-      if (cached) return NextResponse.json(cached.data);
+      if (canUseStale) return staleResponse(staleEntry!.data);
+      if (res.status === 429) {
+        return NextResponse.json(
+          { error: "CoinGecko rate limit reached, please wait a minute and try again" },
+          { status: 429 }
+        );
+      }
       return NextResponse.json({ error: "CoinGecko API error" }, { status: res.status });
     }
     const raw = await res.json();
@@ -81,9 +95,10 @@ export async function GET(
       maxSupply: cur("max_supply"),
     };
     cache.set(key, { time: Date.now(), data });
+    stale.set(key, { time: Date.now(), data });
     return NextResponse.json(data);
   } catch {
-    if (cached) return NextResponse.json(cached.data);
+    if (canUseStale) return staleResponse(staleEntry!.data);
     return NextResponse.json({ error: "Network error" }, { status: 500 });
   }
 }
