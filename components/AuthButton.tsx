@@ -1,6 +1,8 @@
+import { connection } from "next/server";
 import { auth, signIn, signOut } from "@/auth";
 
 export default async function AuthButton() {
+  await connection();
   const session = await auth();
 
   if (session?.user) {
