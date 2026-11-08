@@ -39,6 +39,8 @@ export default function Home() {
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [showWatchlist, setShowWatchlist] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+  const [watchlistError, setWatchlistError] = useState("");
 
   const [sortKey, setSortKey] = useState<SortKey>("market_cap");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -111,26 +113,109 @@ export default function Home() {
     return () => clearInterval(timer);
   }, []);
 
-  // Watchlist: page open aagum bodhu save pannadha data-va edukkum
-  useEffect(() => {
+  async function loadWatchlist() {
     try {
-      const saved = localStorage.getItem("watchlist");
-      if (saved) setWatchlist(JSON.parse(saved));
-    } catch {}
-    setLoaded(true);
+      const res = await fetch("/api/watchlist");
+      if (res.status === 401) {
+        setSignedIn(false);
+        try {
+          const saved = localStorage.getItem("watchlist");
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) setWatchlist(parsed);
+          }
+        } catch {}
+        setLoaded(true);
+        return;
+      }
+      setSignedIn(true);
+      let local: string[] = [];
+      try {
+        const saved = localStorage.getItem("watchlist");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) local = parsed;
+        }
+      } catch {}
+      if (local.length > 0) {
+        try {
+          await fetch("/api/watchlist", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ coinIds: local }),
+          });
+        } catch {}
+      }
+      const res2 = await fetch("/api/watchlist");
+      if (res2.ok) {
+        const data = await res2.json();
+        if (Array.isArray(data?.coinIds)) setWatchlist(data.coinIds);
+      }
+      try {
+        localStorage.removeItem("watchlist");
+      } catch {}
+      setLoaded(true);
+    } catch {
+      setSignedIn(false);
+      try {
+        const saved = localStorage.getItem("watchlist");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) setWatchlist(parsed);
+        }
+      } catch {}
+      setLoaded(true);
+    }
+  }
+
+  useEffect(() => {
+    loadWatchlist();
   }, []);
 
-  // Watchlist maarum bodhu save pannum
   useEffect(() => {
-    if (loaded) {
-      localStorage.setItem("watchlist", JSON.stringify(watchlist));
+    if (loaded && !signedIn) {
+      try {
+        localStorage.setItem("watchlist", JSON.stringify(watchlist));
+      } catch {}
     }
-  }, [watchlist, loaded]);
+  }, [watchlist, loaded, signedIn]);
 
   function toggleWatch(id: string) {
+    if (!signedIn) {
+      setWatchlist((prev) =>
+        prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      );
+      return;
+    }
+
+    const wasIn = watchlist.includes(id);
     setWatchlist((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      wasIn ? prev.filter((x) => x !== id) : [...prev, id]
     );
+
+    (async () => {
+      try {
+        if (wasIn) {
+          const res = await fetch(`/api/watchlist/${encodeURIComponent(id)}`, {
+            method: "DELETE",
+          });
+          if (!res.ok) throw new Error("Failed");
+        } else {
+          const res = await fetch("/api/watchlist", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ coinId: id }),
+          });
+          if (!res.ok) throw new Error("Failed");
+        }
+        setWatchlistError("");
+      } catch {
+        setWatchlist((prev) =>
+          wasIn ? [...prev, id] : prev.filter((x) => x !== id)
+        );
+        setWatchlistError("Failed to update watchlist");
+      }
+    })();
   }
 
   function handleSort(key: SortKey) {
@@ -195,6 +280,15 @@ export default function Home() {
           ⭐ Watchlist ({watchlist.length})
         </button>
       </div>
+
+      {!signedIn && loaded && (
+        <p className="mb-4 text-sm text-gray-400">
+          Sign in to sync your watchlist across devices.
+        </p>
+      )}
+      {watchlistError && (
+        <p className="mb-4 text-sm text-red-500">{watchlistError}</p>
+      )}
 
       <input
         type="text"
