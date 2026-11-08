@@ -36,13 +36,19 @@ const STATS = [
   { key: "change1y", label: "1y %" },
 ];
 
+type ChartData =
+  | { type: "line"; prices: [number, number][]; key: string }
+  | { type: "candles"; candles: [number, number, number, number, number][]; key: string };
+
 export default function CoinDetail({ id }: { id: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [currency, setCurrency] = useCurrency();
+  const [currency] = useCurrency();
   const [days, setDays] = useState(7);
   const [chartType, setChartType] = useState<"line" | "candles">("line");
-  const [prices, setPrices] = useState<[number, number][]>([]);
-  const [candles, setCandles] = useState<[number, number, number, number, number][]>([]);
+  const [chartData, setChartData] = useState<ChartData | null>(null);
+  const [chartLoading, setChartLoading] = useState(true);
+  const [chartError, setChartError] = useState("");
+  const [retry, setRetry] = useState(0);
   const [details, setDetails] = useState<{
     name: string | null;
     symbol: string | null;
@@ -67,92 +73,95 @@ export default function CoinDetail({ id }: { id: string }) {
     totalSupply: number | null;
     maxSupply: number | null;
   } | null>(null);
-  const [loading, setLoading] = useState(true);
   const [detailsError, setDetailsError] = useState(false);
-  const [error, setError] = useState("");
+  const [chartDoneKey, setChartDoneKey] = useState("");
   const [expanded, setExpanded] = useState(false);
+  const lastDetailsFetch = useRef("");
 
-  // Data load (line)
+  const chartKey = `${id}|${days}|${currency}|${chartType}`;
+  const detailsKey = `${id}|${currency}`;
+
+  // Chart data load
   useEffect(() => {
-    if (chartType !== "line") return;
-    let cancelled = false;
+    setChartData(null);
+    setChartLoading(true);
+    setChartError("");
+    let ignore = false;
+    const controller = new AbortController();
+
     async function load() {
-      setLoading(true);
       try {
-        const res = await fetch(
-          `/api/coins/${id}?days=${days}&currency=${currency}`
-        );
+        const url =
+          chartType === "line"
+            ? `/api/coins/${id}?days=${days}&currency=${currency}`
+            : `/api/coins/${encodeURIComponent(id)}/ohlc?days=${days}&currency=${currency}`;
+        const res = await fetch(url, { signal: controller.signal, cache: "no-store" });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Failed to load");
-        if (!cancelled) {
-          setPrices(data.prices);
-          setError("");
+        if (ignore) return;
+        if (chartType === "line") {
+          setChartData({ type: "line", prices: data.prices ?? [], key: chartKey });
+        } else {
+          setChartData({ type: "candles", candles: data.candles ?? [], key: chartKey });
         }
+        setChartError("");
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Something went wrong");
+        if (ignore || (e instanceof DOMException && e.name === "AbortError")) return;
+        setChartError(e instanceof Error ? e.message : "Something went wrong");
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!ignore) {
+          setChartLoading(false);
+          setChartDoneKey(chartKey);
+        }
       }
     }
     load();
-    return () => { cancelled = true; };
-  }, [id, days, currency, chartType]);
+    return () => {
+      ignore = true;
+      controller.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, days, currency, chartType, retry]);
 
-  // Data load (candles)
+  // Details load - only after chart finishes
   useEffect(() => {
-    if (chartType !== "candles") return;
-    let cancelled = false;
-    async function load() {
-      setLoading(true);
-      try {
-        const res = await fetch(
-          `/api/coins/${encodeURIComponent(id)}/ohlc?days=${days}&currency=${currency}`,
-          { cache: "no-store" }
-        );
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to load");
-        if (!cancelled) {
-          setCandles(data.candles);
-          setError("");
-        }
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Something went wrong");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, [id, days, currency, chartType]);
-
-  // Details load
-  useEffect(() => {
+    if (!chartDoneKey) return;
+    if (lastDetailsFetch.current === detailsKey) return;
+    let ignore = false;
+    lastDetailsFetch.current = detailsKey;
+    setDetails(null);
+    setDetailsError(false);
     async function loadDetails() {
-      setDetails(null);
       try {
         const res = await fetch(
           `/api/coins/${encodeURIComponent(id)}/details?currency=${currency}`,
           { cache: "no-store" }
         );
         if (!res.ok) {
-          setDetailsError(true);
+          if (!ignore) setDetailsError(true);
           return;
         }
         const data = await res.json();
-        setDetails(data);
-        setDetailsError(false);
+        if (!ignore) {
+          setDetails(data);
+          setDetailsError(false);
+        }
       } catch {
-        setDetailsError(true);
+        if (!ignore) setDetailsError(true);
       }
     }
     loadDetails();
-  }, [id, currency]);
+    return () => {
+      ignore = true;
+    };
+  }, [chartDoneKey, id, currency, detailsKey]);
 
   // Chart draw
   useEffect(() => {
     if (!containerRef.current) return;
-    if (chartType === "line" && prices.length === 0) return;
-    if (chartType === "candles" && candles.length === 0) return;
+    if (!chartData || chartData.key !== chartKey) return;
+    if (chartData.type === "line" && chartData.prices.length === 0) return;
+    if (chartData.type === "candles" && chartData.candles.length === 0) return;
 
     const chart = createChart(containerRef.current, {
       height: 400,
@@ -170,21 +179,21 @@ export default function CoinDetail({ id }: { id: string }) {
       timeScale: { timeVisible: days <= 7 },
     });
 
-    if (chartType === "line") {
+    if (chartData.type === "line") {
       const series = chart.addSeries(AreaSeries, {
         lineColor: "#22c55e",
         topColor: "rgba(34,197,94,0.4)",
         bottomColor: "rgba(34,197,94,0)",
       });
       const seen = new Set<number>();
-      const data = prices
+      const data = chartData.prices
         .map(([ms, price]) => ({
           time: Math.floor(ms / 1000) as UTCTimestamp,
           value: price,
         }))
         .filter((p) => {
-          if (seen.has(p.time)) return false;
-          seen.add(p.time);
+          if (seen.has(p.time as number)) return false;
+          seen.add(p.time as number);
           return true;
         });
       series.setData(data);
@@ -197,7 +206,7 @@ export default function CoinDetail({ id }: { id: string }) {
         wickDownColor: "#ef4444",
       });
       const seen = new Set<number>();
-      const data = candles
+      const data = chartData.candles
         .map(([ms, open, high, low, close]) => ({
           time: Math.floor(ms / 1000) as UTCTimestamp,
           open,
@@ -215,11 +224,9 @@ export default function CoinDetail({ id }: { id: string }) {
     }
 
     chart.timeScale().fitContent();
-
     return () => chart.remove();
-  }, [prices, candles, days, currency, chartType]);
+  }, [chartData, days, currency, chartType, chartKey]);
 
-  const latest = prices.length ? prices[prices.length - 1][1] : null;
   const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 2 });
 
   function statValue(key: string): string {
@@ -286,7 +293,7 @@ export default function CoinDetail({ id }: { id: string }) {
           )}
           <div>
             <h1 className="text-3xl font-bold">
-              {details?.name ?? (loading ? <span className="animate-pulse" /> : id)}
+              {details?.name ?? (chartLoading ? <span className="animate-pulse" /> : id)}
             </h1>
             <p className="text-sm uppercase text-gray-400">
               {details?.symbol?.toUpperCase() ?? ""}
@@ -336,8 +343,18 @@ export default function CoinDetail({ id }: { id: string }) {
         </div>
       </div>
 
-      {loading ? (
+      {chartLoading ? (
         <div className="h-[400px] w-full animate-pulse rounded bg-gray-700" />
+      ) : chartError ? (
+        <div className="h-[400px] w-full rounded bg-gray-800 flex flex-col items-center justify-center gap-4">
+          <p className="text-red-500">{chartError}</p>
+          <button
+            onClick={() => setRetry((r) => r + 1)}
+            className="rounded-lg border border-gray-500 px-4 py-2"
+          >
+            Try again
+          </button>
+        </div>
       ) : (
         <div ref={containerRef} className="w-full" />
       )}
@@ -382,8 +399,6 @@ export default function CoinDetail({ id }: { id: string }) {
           )}
         </div>
       ) : null}
-
-      {error && <p className="text-red-500">Error: {error}</p>}
     </main>
   );
 }
