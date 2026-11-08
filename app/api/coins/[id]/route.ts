@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isCurrency } from "@/lib/currency";
 
 const cache = new Map<string, { time: number; data: unknown }>();
 const TTL = 60 * 1000; // 60 seconds
@@ -8,8 +9,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const days = new URL(req.url).searchParams.get("days") ?? "7";
-  const key = `${id}-${days}`;
+  const { searchParams } = new URL(req.url);
+  const days = searchParams.get("days") ?? "7";
+  const rawCurrency = searchParams.get("currency");
+  const currency = rawCurrency && isCurrency(rawCurrency)
+    ? rawCurrency.toLowerCase()
+    : "usd";
+  const key = `${currency}-${id}-${days}`;
 
   const cached = cache.get(key);
   if (cached && Date.now() - cached.time < TTL) {
@@ -18,11 +24,10 @@ export async function GET(
 
   try {
     const res = await fetch(
-      `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=${days}`,
+      `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=${currency}&days=${days}`,
       { cache: "no-store" }
     );
     if (!res.ok) {
-      // Error vandha, pazhaya data irundha adhaye tharum
       if (cached) return NextResponse.json(cached.data);
       return NextResponse.json(
         { error: "CoinGecko API error" },
