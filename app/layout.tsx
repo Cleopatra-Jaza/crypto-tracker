@@ -7,6 +7,7 @@ import "./globals.css";
 import AuthButton from "@/components/AuthButton";
 import CurrencySelect from "@/components/CurrencySelect";
 import ThemeToggle from "@/components/ThemeToggle";
+import AlertChecker from "@/components/AlertChecker";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -61,6 +62,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Link href="/">Crypto Tracker</Link>
           <Link href="/portfolio">Portfolio</Link>
           <Link href="/compare">Compare</Link>
+          <Link href="/alerts">Alerts</Link>
         </div>
         <Suspense fallback={null}>
           <AuthButton />
@@ -69,6 +71,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <CurrencySelect />
       </header>
       {children}
+      <AlertChecker />
     </body>
     </html>
   );
