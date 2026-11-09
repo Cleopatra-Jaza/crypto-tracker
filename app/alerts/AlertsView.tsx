@@ -25,6 +25,9 @@ export default function AlertsView() {
   const [targetPrice, setTargetPrice] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [checkMsg, setCheckMsg] = useState("");
+  const [checkErr, setCheckErr] = useState("");
   const [notif, setNotif] = useState<NotificationPermission | "unsupported">("default");
 
   async function load() {
@@ -104,6 +107,40 @@ export default function AlertsView() {
     setNotif(p);
   }
 
+  async function onCheckNow() {
+    setChecking(true);
+    setCheckMsg("");
+    setCheckErr("");
+    try {
+      const res = await fetch("/api/alerts/check", { method: "POST", cache: "no-store" });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        const errText = typeof data?.error === "string" ? data.error : "Request failed";
+        console.error("check now failed", res.status, data);
+        setCheckErr(`Check failed (HTTP ${res.status}: ${errText})`);
+      } else {
+        const checked = typeof data?.checked === "number" ? data.checked : 0;
+        const prices = data?.prices && typeof data.prices === "object" ? data.prices : {};
+        const priceStr = Object.entries(prices)
+          .map(([id, p]) => `${id} ${formatMoney(typeof p === "number" ? p : null, "usd")}`)
+          .join(", ");
+        const trigCount = Array.isArray(data?.triggered) ? data.triggered.length : 0;
+        setCheckMsg(
+          `Checked ${checked} alert(s).${priceStr ? ` Prices: ${priceStr}.` : ""} Triggered: ${trigCount}`
+        );
+        if (trigCount > 0) {
+          window.dispatchEvent(new CustomEvent("alert-triggered", { detail: data.triggered }));
+        }
+      }
+      await load();
+    } catch (e) {
+      console.error("check now error", e);
+      setCheckErr("Check failed (network error)");
+    } finally {
+      setChecking(false);
+    }
+  }
+
   if (unauthorized) {
     return (
       <main className="mx-auto max-w-4xl p-6">
@@ -123,19 +160,30 @@ export default function AlertsView() {
     <main className="mx-auto max-w-4xl p-6">
       <h1 className="mb-4 text-3xl font-bold">Price alerts</h1>
 
-      {notif === "default" && (
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        {notif === "default" && (
+          <button
+            onClick={requestNotif}
+            className="rounded-lg border border-gray-500 px-4 py-2 text-sm"
+          >
+            Enable browser notifications
+          </button>
+        )}
         <button
-          onClick={requestNotif}
-          className="mb-4 rounded-lg border border-gray-500 px-4 py-2 text-sm"
+          onClick={onCheckNow}
+          disabled={checking}
+          className="rounded-lg border border-gray-500 px-4 py-2 text-sm disabled:opacity-50"
         >
-          Enable browser notifications
+          {checking ? "Checking..." : "Check now"}
         </button>
-      )}
+      </div>
       {notif === "denied" && (
-        <p className="mb-4 text-sm text-gray-400">
+        <p className="mb-2 text-sm text-gray-400">
           Notifications are blocked in your browser settings.
         </p>
       )}
+      {checkMsg && <p className="mb-2 text-sm text-gray-400">{checkMsg}</p>}
+      {checkErr && <p className="mb-2 text-sm text-red-500">{checkErr}</p>}
 
       <form onSubmit={onSubmit} className="mb-4 space-y-3 rounded-lg border border-gray-700 bg-gray-800 p-4">
         <div className="grid gap-3 sm:grid-cols-3">
@@ -252,3 +300,4 @@ export default function AlertsView() {
     </main>
   );
 }
+

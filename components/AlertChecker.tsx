@@ -1,16 +1,30 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { formatMoney } from "@/lib/currency";
 
 type Toast = { id: string; text: string };
+type Triggered = { coinName: string; direction: string; targetPrice: number };
+
+function toastText(t: Triggered) {
+  const dir = t.direction === "below" ? "dropped below" : "went above";
+  return `${t.coinName} ${dir} ${formatMoney(t.targetPrice, "usd")}`;
+}
 
 export default function AlertChecker() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const checking = useRef(false);
 
-  function pushToast(text: string) {
+  const dismiss = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+    if (timers.current[id]) {
+      clearTimeout(timers.current[id]);
+      delete timers.current[id];
+    }
+  }, []);
+
+  const pushToast = useCallback((text: string) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     setToasts((prev) => [...prev, { id, text }].slice(-5));
     timers.current[id] = setTimeout(() => dismiss(id), 20000);
@@ -19,60 +33,63 @@ export default function AlertChecker() {
         new Notification("Price alert", { body: text });
       } catch {}
     }
-  }
+  }, [dismiss]);
 
-  function dismiss(id: string) {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-    if (timers.current[id]) {
-      clearTimeout(timers.current[id]);
-      delete timers.current[id];
+  const check = useCallback(async () => {
+    if (checking.current) return;
+    checking.current = true;
+    try {
+      const res = await fetch("/api/alerts/check", { method: "POST", cache: "no-store" });
+      if (res.status === 401) return; // skip this round, retry next time
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        console.error("alert check failed", res.status, data);
+        return;
+      }
+      if (Array.isArray(data?.triggered)) {
+        for (const t of data.triggered as Triggered[]) pushToast(toastText(t));
+      }
+    } catch (e) {
+      console.error("alert check error", e);
+    } finally {
+      checking.current = false;
     }
-  }
+  }, [pushToast]);
 
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | null = null;
-    let stopped = false;
-
-    async function check() {
-      if (stopped || checking.current) return;
-      checking.current = true;
-      try {
-        const res = await fetch("/api/alerts/check", { method: "POST", cache: "no-store" });
-        if (res.status === 401) {
-          stopped = true;
-          if (interval) clearInterval(interval);
-          return;
-        }
-        if (!res.ok) return;
-        const data = await res.json().catch(() => null);
-        if (Array.isArray(data?.triggered)) {
-          for (const t of data.triggered) {
-            const dir = t.direction === "below" ? "dropped below" : "went above";
-            const text = `${t.coinName} ${dir} ${formatMoney(t.targetPrice, "usd")}`;
-            pushToast(text);
-          }
-        }
-      } catch {
-        // ignore, try next time
-      } finally {
-        checking.current = false;
-      }
-    }
+    let cancelled = false;
+    const safeCheck = () => { if (!cancelled) check(); };
 
     const start = setTimeout(() => {
-      check();
-      if (!stopped) interval = setInterval(check, 60000);
+      safeCheck();
     }, 5000);
+    const interval = setInterval(safeCheck, 60000);
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") safeCheck();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", safeCheck);
+
+    const onTriggered = (e: Event) => {
+      const detail = (e as CustomEvent<Triggered[]>).detail;
+      if (Array.isArray(detail)) {
+        for (const t of detail) pushToast(toastText(t));
+      }
+    };
+    window.addEventListener("alert-triggered", onTriggered as EventListener);
 
     return () => {
-      stopped = true;
+      cancelled = true;
       clearTimeout(start);
-      if (interval) clearInterval(interval);
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", safeCheck);
+      window.removeEventListener("alert-triggered", onTriggered as EventListener);
       Object.values(timers.current).forEach(clearTimeout);
       timers.current = {};
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [check, pushToast]);
 
   if (toasts.length === 0) return null;
   return (
@@ -92,3 +109,4 @@ export default function AlertChecker() {
     </div>
   );
 }
+

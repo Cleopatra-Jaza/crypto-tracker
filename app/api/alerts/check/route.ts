@@ -39,7 +39,7 @@ export async function POST() {
       orderBy: { createdAt: "asc" },
     });
     if (alerts.length === 0) {
-      return NextResponse.json({ triggered: [] });
+      return NextResponse.json({ triggered: [], checked: 0, prices: {} });
     }
 
     const uniqueIds = Array.from(new Set(alerts.map((a) => a.coinId))).slice(0, 20);
@@ -76,9 +76,14 @@ export async function POST() {
     }
 
     const triggered: ReturnType<typeof serialize>[] = [];
+    const priceMap: Record<string, number> = {};
+    for (const id of uniqueIds) {
+      const p = prices?.[id]?.usd;
+      if (typeof p === "number" && Number.isFinite(p)) priceMap[id] = p;
+    }
     for (const alert of alerts) {
-      const current = prices?.[alert.coinId]?.usd;
-      if (typeof current !== "number" || !Number.isFinite(current)) continue;
+      const current = priceMap[alert.coinId];
+      if (typeof current !== "number") continue;
       const target = Number(alert.targetPrice);
       const hit =
         (alert.direction === "above" && current >= target) ||
@@ -91,8 +96,9 @@ export async function POST() {
         triggered.push(serialize(updated));
       }
     }
-    return NextResponse.json({ triggered });
+    return NextResponse.json({ triggered, checked: alerts.length, prices: priceMap });
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
+
