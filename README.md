@@ -56,7 +56,17 @@ npm run dev
 
 ## Screenshots
 
-Screenshots coming soon.
+![Home: market overview and live prices](public/screenshots/home.png)
+*Home: Fear & Greed, gainers/losers, trending and the live price table*
+
+![Coin page with candlestick chart and indicators](public/screenshots/coin.png)
+*Coin page: candlestick chart with RSI and key stats*
+
+![Compare two coins](public/screenshots/compare.png)
+*Compare: percent-change chart and stats side by side*
+
+![Portfolio tracker](public/screenshots/portfolio.png)
+*Portfolio: holdings, profit/loss and allocation*
 
 ## Credits
 
