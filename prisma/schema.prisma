@@ -18,6 +18,7 @@ model User {
   sessions      Session[]
   holdings      Holding[]
   watchlist     WatchlistItem[]
+  alerts        Alert[]
 }
 
 model Account {
@@ -74,5 +75,19 @@ model WatchlistItem {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, coinId])
+  @@index([userId])
+}
+
+model Alert {
+  id          String    @id @default(cuid())
+  coinId      String
+  coinName    String
+  targetPrice Decimal   @db.Decimal(24, 8)
+  direction   String    // "above" or "below"
+  triggeredAt DateTime?
+  createdAt   DateTime  @default(now())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
 }
