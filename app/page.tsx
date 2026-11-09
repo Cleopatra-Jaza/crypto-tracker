@@ -20,6 +20,14 @@ type Coin = {
   price_change_percentage_30d_in_currency: number | null;
 };
 
+type SearchResult = {
+  id: string;
+  name: string;
+  symbol: string;
+  thumb: string | null;
+  rank: number | null;
+};
+
 type SortKey =
   | "name"
   | "current_price"
@@ -48,6 +56,12 @@ export default function Home() {
   const timeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const prevCurrencyRef = useRef<string>(currency);
   const [flash, setFlash] = useState<Record<string, "up" | "down">>({});
+
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState("");
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchIgnoreRef = useRef(false);
 
   useEffect(() => {
     if (prevCurrencyRef.current !== currency) {
@@ -99,6 +113,49 @@ export default function Home() {
       Object.values(timeoutsRef.current).forEach(clearTimeout);
     };
   }, []);
+
+  useEffect(() => {
+    searchIgnoreRef.current = false;
+    const trimmed = search.trim();
+    if (trimmed.length < 2) {
+      setSearchResults([]);
+      setSearchError("");
+      setSearchLoading(false);
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+        searchTimerRef.current = null;
+      }
+      return;
+    }
+    setSearchLoading(true);
+    setSearchError("");
+    searchTimerRef.current = setTimeout(() => {
+      searchIgnoreRef.current = false;
+      fetch(`/api/search?query=${encodeURIComponent(trimmed)}`)
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then((data) => {
+          if (searchIgnoreRef.current) return;
+          const coinsArr = Array.isArray(data?.coins) ? data.coins : [];
+          setSearchResults(coinsArr);
+          setSearchLoading(false);
+        })
+        .catch((e) => {
+          if (searchIgnoreRef.current) return;
+          setSearchError(e instanceof Error ? e.message : "Something went wrong");
+          setSearchLoading(false);
+        });
+    }, 500);
+    return () => {
+      searchIgnoreRef.current = true;
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+        searchTimerRef.current = null;
+      }
+    };
+  }, [search]);
 
   async function loadCoins() {
     try {
@@ -489,6 +546,40 @@ export default function Home() {
           </tbody>
         </table>
       </div>
+      )}
+
+      {search.length >= 2 && !showWatchlist && (
+        <div className="mb-6">
+          <h2 className="mb-2 text-xl font-semibold">More coins</h2>
+          {searchLoading ? (
+            <div className="animate-pulse h-4 w-24 rounded bg-gray-700" />
+          ) : searchError ? (
+            <p className="mb-2 text-sm text-red-500">Search failed: {searchError}</p>
+          ) : searchResults.length === 0 ? (
+            <p className="mb-2 text-sm text-gray-400">No other coins found</p>
+          ) : (
+            <ul className="space-y-1">
+              {searchResults
+                .filter((r) => !coins.some((c) => c.id === r.id))
+                .map((r) => (
+                  <li key={r.id} className="p-3 border-b border-gray-700 flex items-center gap-3">
+                    <Link href={`/coin/${r.id}`} className="flex items-center gap-3">
+                      {r.thumb ? (
+                        <img src={r.thumb} alt={r.name} className="h-6 w-6 rounded-full" />
+                      ) : (
+                        <div className="h-6 w-6 rounded-full bg-gray-700 animate-pulse" />
+                      )}
+                      <span className="font-medium">{r.name}</span>
+                      <span className="text-sm uppercase text-gray-400">{r.symbol}</span>
+                      {r.rank != null && (
+                        <span className="ml-2 text-xs text-gray-500">#{r.rank}</span>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </div>
       )}
     </main>
   );
