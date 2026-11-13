@@ -1,7 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 const tabs = [
   {
@@ -46,20 +46,50 @@ const tabs = [
 ];
 
 export default function BottomNav() {
-  const pathname = usePathname();
+  const [pathname, setPathname] = useState("");
+
+  useEffect(() => {
+    setPathname(window.location.pathname);
+    const onNav = () => setPathname(window.location.pathname);
+    window.addEventListener("popstate", onNav);
+    return () => window.removeEventListener("popstate", onNav);
+  }, []);
+
   return (
-    <nav className="md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-[var(--background)] dark:border-gray-700 pb-[env(safe-area-inset-bottom)]">
-      <ul className="flex">
+    <nav
+      aria-label="Main"
+      data-testid="bottom-nav"
+      className="md:hidden"
+      style={{
+        position: "fixed",
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 50,
+        background: "var(--background)",
+        borderTop: "1px solid #e5e7eb",
+        paddingBottom: "env(safe-area-inset-bottom)",
+      }}
+    >
+      <ul style={{ display: "flex", margin: 0, padding: 0, listStyle: "none" }}>
         {tabs.map((t) => {
           const active = t.href === "/" ? pathname === "/" : pathname.startsWith(t.href);
           return (
-            <li key={t.href} className="flex-1">
+            <li key={t.href} style={{ flex: 1 }}>
               <Link
                 href={t.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] ${
-                  active ? "text-green-500" : "text-gray-400"
-                }`}
+                style={{
+                  display: "flex",
+                  minHeight: 56,
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 4,
+                  fontSize: 11,
+                  color: active ? "#22c55e" : "#9ca3af",
+                  textDecoration: "none",
+                }}
               >
                 {t.icon}
                 <span>{t.label}</span>

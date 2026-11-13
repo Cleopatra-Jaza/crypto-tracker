@@ -79,7 +79,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <CurrencySelect />
         </div>
       </header>
-      <div className="pb-20 md:pb-0">
+      <div className="pb-24 md:pb-0">
         {children}
       </div>
       <BottomNav />
