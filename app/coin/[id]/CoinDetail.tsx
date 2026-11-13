@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useCurrency } from "@/lib/useCurrency";
 import { formatMoney, formatCompactMoney } from "@/lib/currency";
-import { sma, ema, rsi, macd, type Point } from "@/lib/indicators";
+import { sma, rsi, macd, type Point } from "@/lib/indicators";
 import {
   createChart,
   AreaSeries,
@@ -16,13 +16,25 @@ import {
   LineStyle,
 } from "lightweight-charts";
 
-const RANGES = [
-  { label: "1D", days: 1 },
-  { label: "7D", days: 7 },
-  { label: "30D", days: 30 },
-  { label: "90D", days: 90 },
-  { label: "1Y", days: 365 },
+type RangeKey = "1h" | "1d" | "7d" | "30d" | "90d" | "1y" | "all";
+
+const RANGES: { label: string; key: RangeKey }[] = [
+  { label: "1H", key: "1h" },
+  { label: "1D", key: "1d" },
+  { label: "7D", key: "7d" },
+  { label: "30D", key: "30d" },
+  { label: "90D", key: "90d" },
+  { label: "1Y", key: "1y" },
+  { label: "All", key: "all" },
 ];
+
+const CG_DAYS: Record<string, number> = {
+  "1d": 1,
+  "7d": 7,
+  "30d": 30,
+  "90d": 90,
+  "1y": 365,
+};
 
 const STATS = [
   { key: "marketCap", label: "Market cap" },
@@ -47,7 +59,7 @@ type ChartData =
 export default function CoinDetail({ id }: { id: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currency] = useCurrency();
-  const [days, setDays] = useState(7);
+  const [range, setRange] = useState<RangeKey>("7d");
   const [chartType, setChartType] = useState<"line" | "candles">("line");
   const [showSMA20, setShowSMA20] = useState(false);
   const [showSMA50, setShowSMA50] = useState(false);
@@ -83,33 +95,64 @@ export default function CoinDetail({ id }: { id: string }) {
     maxSupply: number | null;
   } | null>(null);
   const [detailsError, setDetailsError] = useState(false);
-  const [chartDoneKey, setChartDoneKey] = useState("");
+  const [detailsLoaded, setDetailsLoaded] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const lastDetailsFetch = useRef("");
 
-  const chartKey = `${id}|${days}|${currency}|${chartType}`;
+  const isBinanceRange = range === "1h" || range === "all";
+  const displayCurrency = isBinanceRange ? "usd" : currency;
+  const chartKey = `${id}|${range}|${displayCurrency}|${chartType}`;
   const detailsKey = `${id}|${currency}`;
+  const binanceEnabled =
+    detailsLoaded &&
+    typeof details?.rank === "number" &&
+    details.rank <= 300 &&
+    typeof details?.symbol === "string" &&
+    details.symbol.length > 0;
 
   // Chart data load
   useEffect(() => {
     setChartData(null);
-    setChartLoading(true);
     setChartError("");
     let ignore = false;
     const controller = new AbortController();
 
+    const binance = range === "1h" || range === "all";
+    if (binance && !detailsLoaded) {
+      setChartLoading(true);
+      return () => {
+        ignore = true;
+        controller.abort();
+      };
+    }
+
     async function load() {
+      setChartLoading(true);
       try {
-        const url =
-          chartType === "line"
-            ? `/api/coins/${id}?days=${days}&currency=${currency}`
-            : `/api/coins/${encodeURIComponent(id)}/ohlc?days=${days}&currency=${currency}`;
+        let url: string;
+        if (binance) {
+          const sym = details?.symbol ?? "";
+          if (!sym) throw new Error("Coin symbol not available");
+          url = `/api/klines?symbol=${encodeURIComponent(sym)}&range=${range}`;
+        } else {
+          const days = CG_DAYS[range];
+          url =
+            chartType === "line"
+              ? `/api/coins/${id}?days=${days}&currency=${currency}`
+              : `/api/coins/${encodeURIComponent(id)}/ohlc?days=${days}&currency=${currency}`;
+        }
         const res = await fetch(url, { signal: controller.signal, cache: "no-store" });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Failed to load");
         if (ignore) return;
         if (chartType === "line") {
-          setChartData({ type: "line", prices: data.prices ?? [], key: chartKey });
+          if (binance) {
+            const candles: [number, number, number, number, number][] = data.candles ?? [];
+            const prices: [number, number][] = candles.map((c) => [c[0], c[4]]);
+            setChartData({ type: "line", prices, key: chartKey });
+          } else {
+            setChartData({ type: "line", prices: data.prices ?? [], key: chartKey });
+          }
         } else {
           setChartData({ type: "candles", candles: data.candles ?? [], key: chartKey });
         }
@@ -120,7 +163,6 @@ export default function CoinDetail({ id }: { id: string }) {
       } finally {
         if (!ignore) {
           setChartLoading(false);
-          setChartDoneKey(chartKey);
         }
       }
     }
@@ -130,16 +172,16 @@ export default function CoinDetail({ id }: { id: string }) {
       controller.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, days, currency, chartType, retry]);
+  }, [id, range, currency, chartType, retry, detailsLoaded, details?.symbol]);
 
-  // Details load - only after chart finishes
+  // Details load
   useEffect(() => {
-    if (!chartDoneKey) return;
     if (lastDetailsFetch.current === detailsKey) return;
     let ignore = false;
     lastDetailsFetch.current = detailsKey;
     setDetails(null);
     setDetailsError(false);
+    setDetailsLoaded(false);
     async function loadDetails() {
       try {
         const res = await fetch(
@@ -147,23 +189,30 @@ export default function CoinDetail({ id }: { id: string }) {
           { cache: "no-store" }
         );
         if (!res.ok) {
-          if (!ignore) setDetailsError(true);
+          if (!ignore) {
+            setDetailsError(true);
+            setDetailsLoaded(true);
+          }
           return;
         }
         const data = await res.json();
         if (!ignore) {
           setDetails(data);
           setDetailsError(false);
+          setDetailsLoaded(true);
         }
       } catch {
-        if (!ignore) setDetailsError(true);
+        if (!ignore) {
+          setDetailsError(true);
+          setDetailsLoaded(true);
+        }
       }
     }
     loadDetails();
     return () => {
       ignore = true;
     };
-  }, [chartDoneKey, id, currency, detailsKey]);
+  }, [id, currency, detailsKey]);
 
   // Chart draw
   useEffect(() => {
@@ -179,7 +228,7 @@ export default function CoinDetail({ id }: { id: string }) {
     const chart = createChart(containerRef.current, {
       height: chartHeight,
       localization: {
-        priceFormatter: (p: number) => formatMoney(p, currency),
+        priceFormatter: (p: number) => formatMoney(p, displayCurrency),
       },
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
@@ -189,7 +238,12 @@ export default function CoinDetail({ id }: { id: string }) {
         vertLines: { color: "#374151" },
         horzLines: { color: "#374151" },
       },
-      timeScale: { timeVisible: days <= 7 },
+      timeScale:
+        range === "1h"
+          ? { timeVisible: true, secondsVisible: false }
+          : range === "all"
+            ? { timeVisible: false, secondsVisible: false }
+            : { timeVisible: range === "1d" || range === "7d" },
     });
 
     // Close prices for indicators
@@ -388,7 +442,7 @@ export default function CoinDetail({ id }: { id: string }) {
     chart.timeScale().fitContent();
     return () => chart.remove();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chartData, days, currency, chartType, chartKey, showSMA20, showSMA50, showRSI, showMACD]);
+  }, [chartData, range, currency, chartType, chartKey, showSMA20, showSMA50, showRSI, showMACD, displayCurrency]);
 
   const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 2 });
 
@@ -469,19 +523,27 @@ export default function CoinDetail({ id }: { id: string }) {
       </div>
 
       <div className="mb-4 flex gap-2 flex-wrap">
-        {RANGES.map((r) => (
-          <button
-            key={r.label}
-            onClick={() => setDays(r.days)}
-            className={`rounded-lg border px-4 py-2 ${
-              days === r.days
-                ? "border-green-500 bg-green-500 text-black"
-                : "border-gray-500"
-            }`}
-          >
-            {r.label}
-          </button>
-        ))}
+        {RANGES.map((r) => {
+          const isBin = r.key === "1h" || r.key === "all";
+          const disabled = isBin && !binanceEnabled;
+          return (
+            <button
+              key={r.key}
+              onClick={() => {
+                if (!disabled) setRange(r.key);
+              }}
+              disabled={disabled}
+              title={disabled ? "Only available for top coins listed on Binance" : undefined}
+              className={`rounded-lg border px-4 py-2 ${
+                range === r.key
+                  ? "border-green-500 bg-green-500 text-black"
+                  : "border-gray-500"
+              } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              {r.label}
+            </button>
+          );
+        })}
         <div className="ml-2 flex gap-1">
           <button
             onClick={() => setChartType("line")}
@@ -505,6 +567,12 @@ export default function CoinDetail({ id }: { id: string }) {
           </button>
         </div>
       </div>
+
+      {isBinanceRange && (
+        <p className="mb-2 text-xs text-gray-400">
+          1H and All use Binance prices in USD (USDT).
+        </p>
+      )}
 
       <div className="mb-4 flex gap-2 flex-wrap">
         <button
@@ -548,12 +616,22 @@ export default function CoinDetail({ id }: { id: string }) {
       ) : chartError ? (
         <div className="h-[400px] w-full rounded bg-gray-800 flex flex-col items-center justify-center gap-4">
           <p className="text-red-500">{chartError}</p>
-          <button
-            onClick={() => setRetry((r) => r + 1)}
-            className="rounded-lg border border-gray-500 px-4 py-2"
-          >
-            Try again
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setRetry((r) => r + 1)}
+              className="rounded-lg border border-gray-500 px-4 py-2"
+            >
+              Try again
+            </button>
+            {isBinanceRange && (
+              <button
+                onClick={() => setRange("7d")}
+                className="rounded-lg border border-gray-500 px-4 py-2 text-sm"
+              >
+                Switch to 7D
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <div ref={containerRef} className="w-full" />
