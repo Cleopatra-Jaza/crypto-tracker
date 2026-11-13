@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+import { escapeCsvCell, buildCsv } from "@/lib/csv";
+
 type Coin = {
   id: string;
   name: string;
@@ -253,13 +255,6 @@ export default function PortfolioPage() {
     return items;
   })();
 
-  function csvCell(t: unknown): string {
-    const s = String(t ?? "");
-    let out = s.replace(/"/g, '""');
-    if (/^[=+\-@]/.test(s)) out = "'" + out;
-    return '"' + out + '"';
-  }
-
   function exportCSV() {
     if (holdings.length === 0) return;
     const lines: string[] = [];
@@ -273,21 +268,21 @@ export default function PortfolioPage() {
       "Profit/Loss (USD)",
       "Profit/Loss (%)",
     ];
-    lines.push(header.map((c) => csvCell(c)).join(","));
+    lines.push(header.map((c) => escapeCsvCell(c)).join(","));
 
     for (const r of rows) {
       const h = r.holding;
       if (!r.available) {
         lines.push(
           [
-            csvCell(h.coinId),
-            csvCell(""),
-            csvCell(String(h.amount)),
-            csvCell(String(h.buyPrice.toFixed(2))),
-            csvCell(""),
-            csvCell(""),
-            csvCell(""),
-            csvCell(""),
+            escapeCsvCell(h.coinId),
+            escapeCsvCell(""),
+            escapeCsvCell(String(h.amount)),
+            escapeCsvCell(String(h.buyPrice.toFixed(2))),
+            escapeCsvCell(""),
+            escapeCsvCell(""),
+            escapeCsvCell(""),
+            escapeCsvCell(""),
           ].join(",")
         );
         continue;
@@ -298,14 +293,14 @@ export default function PortfolioPage() {
       const profitPercent = r.profitPercent as number;
       lines.push(
         [
-          csvCell(coin.name),
-          csvCell(coin.symbol),
-          csvCell(String(h.amount)),
-          csvCell(String(h.buyPrice.toFixed(2))),
-          csvCell(String(coin.current_price.toFixed(2))),
-          csvCell(String(currentValue.toFixed(2))),
-          csvCell(String(profit.toFixed(2))),
-          csvCell(String(profitPercent.toFixed(2))),
+          escapeCsvCell(coin.name),
+          escapeCsvCell(coin.symbol),
+          escapeCsvCell(String(h.amount)),
+          escapeCsvCell(String(h.buyPrice.toFixed(2))),
+          escapeCsvCell(String(coin.current_price.toFixed(2))),
+          escapeCsvCell(String(currentValue.toFixed(2))),
+          escapeCsvCell(String(profit.toFixed(2))),
+          escapeCsvCell(String(profitPercent.toFixed(2))),
         ].join(",")
       );
     }
@@ -314,18 +309,18 @@ export default function PortfolioPage() {
     const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     lines.push(
       [
-        csvCell("Total"),
-        csvCell(""),
-        csvCell(""),
-        csvCell(""),
-        csvCell(""),
-        csvCell(String(totalValue.toFixed(2))),
-        csvCell(String(totalProfit.toFixed(2))),
-        csvCell(""),
+        escapeCsvCell("Total"),
+        escapeCsvCell(""),
+        escapeCsvCell(""),
+        escapeCsvCell(""),
+        escapeCsvCell(""),
+        escapeCsvCell(String(totalValue.toFixed(2))),
+        escapeCsvCell(String(totalProfit.toFixed(2))),
+        escapeCsvCell(""),
       ].join(",")
     );
 
-    const csv = "\uFEFF" + lines.join("\n");
+    const csv = buildCsv(lines);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
