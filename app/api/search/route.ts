@@ -27,6 +27,7 @@ export async function GET(req: Request) {
 
   try {
     const res = await cgFetch(`/search?query=${encodeURIComponent(query)}`, 600);
+    console.log("[search]", "query:", query, "status:", res.status);
     if (!res.ok) {
       if (canUseStale) {
         return NextResponse.json(stale.data);
@@ -41,10 +42,17 @@ export async function GET(req: Request) {
     }
     const raw = await res.json();
     const items: any[] = Array.isArray(raw?.coins) ? raw.coins : [];
+    console.log(
+      "[search]",
+      "keys:",
+      raw && typeof raw === "object" ? Object.keys(raw) : [],
+      "coins.length:",
+      items.length,
+      "firstId:",
+      items[0]?.id ?? items[0]?.item?.id ?? null
+    );
     const coins = items
-      .map(
-        (entry: any) => entry?.item
-      )
+      .map((entry: any) => entry?.item ?? entry)
       .filter(
         (item): item is { id: string; name: string; symbol: string; thumb: string; market_cap_rank: unknown } =>
           Boolean(item) &&
@@ -68,13 +76,18 @@ export async function GET(req: Request) {
         })
       );
     const data = { coins };
-    if (cache.size >= MAX_CACHE) {
-      const oldestKey = cache.keys().next().value;
-      if (oldestKey !== undefined) {
-        cache.delete(oldestKey);
+    if (coins.length > 0) {
+      if (cache.size >= MAX_CACHE) {
+        const oldestKey = cache.keys().next().value;
+        if (oldestKey !== undefined) {
+          cache.delete(oldestKey);
+        }
       }
+      cache.set(key, { time: Date.now(), data });
     }
-    cache.set(key, { time: Date.now(), data });
+    if (coins.length === 0 && canUseStale) {
+      return NextResponse.json(stale.data);
+    }
     return NextResponse.json(data);
   } catch {
     if (canUseStale) {
