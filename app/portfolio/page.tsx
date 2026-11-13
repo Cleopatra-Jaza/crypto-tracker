@@ -167,14 +167,15 @@ export default function PortfolioPage() {
 
   if (unauthorized) {
     return (
-      <main className="mx-auto max-w-4xl p-6">
-        <h1 className="mb-4 text-3xl font-bold">Portfolio</h1>
-        <p className="text-gray-400">
-          Please sign in to see your portfolio.{" "}
-          <Link href="/api/auth/signin" className="text-blue-500 underline">
-            Sign in
-          </Link>
-        </p>
+      <main className="mx-auto max-w-4xl w-full min-w-0 px-4 py-6 pb-24 md:px-6 md:py-6 md:pb-0">
+        <h1 className="mb-4 text-xl font-medium md:text-3xl md:font-bold">Portfolio</h1>
+        <p className="mb-4 text-gray-400">Please sign in to see your portfolio.</p>
+        <Link
+          href="/api/auth/signin"
+          className="inline-flex min-h-11 items-center rounded-lg border border-gray-500 px-4 py-2 text-blue-500"
+        >
+          Sign in
+        </Link>
       </main>
     );
   }
@@ -210,6 +211,14 @@ export default function PortfolioPage() {
     (sum, r) => (r.available ? sum + (r as { profit: number }).profit : sum),
     0
   );
+
+  const totalCost = rows.reduce(
+    (sum, r) =>
+      r.available ? sum + r.holding.amount * r.holding.buyPrice : sum,
+    0
+  );
+  const totalProfitPercent =
+    totalCost > 0 ? (totalProfit / totalCost) * 100 : null;
 
   // allocation by coin
   const allocMap = new Map<string, { name: string; value: number }>();
@@ -340,17 +349,75 @@ export default function PortfolioPage() {
     .join(", ")}`;
 
   return (
-    <main className="mx-auto max-w-4xl p-6">
-      <h1 className="mb-4 text-3xl font-bold">Portfolio</h1>
+    <main className="mx-auto max-w-4xl w-full min-w-0 px-4 py-6 pb-24 md:px-6 md:py-6 md:pb-0">
+      <h1 className="mb-4 text-xl font-medium md:text-3xl md:font-bold">Portfolio</h1>
 
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">Error: {error}</p>}
 
-      <form onSubmit={handleAdd} className="mb-6 flex flex-wrap gap-2">
+      <div className="mb-4 grid grid-cols-2 gap-2 md:hidden">
+        <div className="min-w-0 rounded border border-gray-700 bg-gray-800 p-3">
+          <div className="text-xs text-gray-400">Total value</div>
+          <div className="break-words text-lg font-medium tabular-nums">
+            ${money(totalValue)}
+          </div>
+        </div>
+        <div className="min-w-0 rounded border border-gray-700 bg-gray-800 p-3">
+          <div className="text-xs text-gray-400">Total profit/loss</div>
+          <div
+            className={`break-words text-lg font-medium tabular-nums ${
+              totalProfit >= 0 ? "text-green-500" : "text-red-500"
+            }`}
+          >
+            ${money(totalProfit)}
+          </div>
+          {totalProfitPercent != null && (
+            <div
+              className={`text-xs ${
+                totalProfit >= 0 ? "text-green-500" : "text-red-500"
+              }`}
+            >
+              {totalProfitPercent >= 0 ? "+" : ""}
+              {totalProfitPercent.toFixed(2)}%
+            </div>
+          )}
+        </div>
+      </div>
+
+      <button
+        onClick={exportCSV}
+        disabled={holdings.length === 0}
+        className="mb-4 min-h-11 w-full rounded-lg border border-gray-500 px-4 py-2 md:hidden disabled:opacity-50"
+      >
+        Export CSV
+      </button>
+
+      <div className="mb-4 hidden flex-wrap items-center gap-6 md:flex">
+        <p>
+          <span className="font-semibold">Total value: </span>
+          ${money(totalValue)}
+        </p>
+        <p className={totalProfit >= 0 ? "text-green-500" : "text-red-500"}>
+          <span className="font-semibold text-inherit">Total profit/loss: </span>
+          ${money(totalProfit)}
+        </p>
+        <button
+          onClick={exportCSV}
+          disabled={holdings.length === 0}
+          className="rounded-lg border border-gray-500 px-4 py-2 disabled:opacity-50"
+        >
+          Export CSV
+        </button>
+      </div>
+
+      <form
+        onSubmit={handleAdd}
+        className="mb-6 grid grid-cols-1 gap-3 md:flex md:flex-wrap md:gap-2"
+      >
         <select
           value={coinId}
           onChange={(e) => setCoinId(e.target.value)}
-          className="rounded-lg border border-gray-400 bg-transparent p-2"
+          className="min-h-11 w-full rounded-lg border border-gray-400 bg-transparent p-2 text-base md:min-h-0 md:w-auto md:text-sm"
           required
         >
           <option value="">Select coin</option>
@@ -366,7 +433,7 @@ export default function PortfolioPage() {
           placeholder="Amount"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="rounded-lg border border-gray-400 bg-transparent p-2"
+          className="min-h-11 w-full rounded-lg border border-gray-400 bg-transparent p-2 text-base md:min-h-0 md:w-auto md:text-sm"
           required
         />
         <input
@@ -375,44 +442,26 @@ export default function PortfolioPage() {
           placeholder="Buy price (USD)"
           value={buyPrice}
           onChange={(e) => setBuyPrice(e.target.value)}
-          className="rounded-lg border border-gray-400 bg-transparent p-2"
+          className="min-h-11 w-full rounded-lg border border-gray-400 bg-transparent p-2 text-base md:min-h-0 md:w-auto md:text-sm"
           required
         />
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-lg border border-gray-500 px-4 py-2"
+          className="min-h-11 w-full rounded-lg border border-gray-500 px-4 py-2 md:min-h-0 md:w-auto"
         >
           Add
         </button>
       </form>
       {formError && <p className="mb-4 text-red-500">{formError}</p>}
 
-      <div className="mb-4 flex gap-6 flex-wrap items-center">
-        <p>
-          <span className="font-semibold">Total value: </span>
-          ${money(totalValue)}
+      {!loading && holdings.length === 0 && !unauthorized && (
+        <p className="mb-4 text-gray-400">
+          No holdings yet. Add your first coin using the form above ↑
         </p>
-        <p
-          className={
-            totalProfit >= 0 ? "text-green-500" : "text-red-500"
-          }
-        >
-          <span className="font-semibold text-inherit">
-            Total profit/loss:{" "}
-          </span>
-          ${money(totalProfit)}
-        </p>
-        <button
-          onClick={exportCSV}
-          disabled={holdings.length === 0}
-          className="rounded-lg border border-gray-500 px-4 py-2"
-        >
-          Export CSV
-        </button>
-      </div>
+      )}
 
-      <div className="overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-gray-500">
@@ -631,12 +680,218 @@ export default function PortfolioPage() {
         </table>
       </div>
 
+      <div className="space-y-3 md:hidden">
+        {rows.map((r) => {
+          const h = r.holding;
+          const editing = editingId === h.id;
+          if (!r.available) {
+            return (
+              <div key={h.id} className="flex flex-col gap-2 rounded-xl border border-gray-700 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <div className="h-8 w-8 shrink-0 rounded-full bg-gray-700" />
+                    <div className="min-w-0">
+                      <div className="truncate font-medium">{h.coinId}</div>
+                      <div className="text-xs uppercase text-gray-400">—</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-gray-400">price unavailable</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <div className="text-xs text-gray-400">Amount</div>
+                    {editing ? (
+                      <input
+                        type="number"
+                        step="any"
+                        min={0}
+                        value={editAmount}
+                        onChange={(e) => setEditAmount(e.target.value)}
+                        className="min-h-11 w-full rounded border border-gray-500 bg-transparent p-2 text-base"
+                      />
+                    ) : (
+                      <div className="font-medium">{money(h.amount)}</div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-400">Buy price</div>
+                    {editing ? (
+                      <input
+                        type="number"
+                        step="any"
+                        min={0}
+                        value={editBuyPrice}
+                        onChange={(e) => setEditBuyPrice(e.target.value)}
+                        className="min-h-11 w-full rounded border border-gray-500 bg-transparent p-2 text-base"
+                      />
+                    ) : (
+                      <div className="font-medium">${money(h.buyPrice)}</div>
+                    )}
+                  </div>
+                  <div className="col-span-2">
+                    <div className="text-xs text-gray-400">Current price</div>
+                    <div className="text-gray-400">price unavailable</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {editing ? (
+                    <>
+                      <button
+                        onClick={() => handleSave(h.id)}
+                        disabled={actionBusy}
+                        className="min-h-11 rounded-lg border border-gray-500 px-2 py-1"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditingId(null)}
+                        disabled={actionBusy}
+                        className="min-h-11 rounded-lg border border-gray-500 px-2 py-1"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => {
+                          setEditingId(h.id);
+                          setEditAmount(String(h.amount));
+                          setEditBuyPrice(String(h.buyPrice));
+                        }}
+                        disabled={actionBusy || editingId !== null}
+                        className="min-h-11 rounded-lg border border-gray-500 px-2 py-1"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(h.id)}
+                        disabled={actionBusy}
+                        className="min-h-11 rounded-lg border border-gray-500 px-2 py-1"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          }
+          const rr = r as {
+            coin: Coin;
+            currentPrice: number;
+            currentValue: number;
+            profit: number;
+            profitPercent: number;
+          };
+          return (
+            <div key={h.id} className="flex flex-col gap-2 rounded-xl border border-gray-700 p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={rr.coin.image} alt={rr.coin.name} className="h-8 w-8 shrink-0 rounded-full" />
+                  <div className="min-w-0">
+                    <div className="truncate font-medium">{rr.coin.name}</div>
+                    <div className="text-xs uppercase text-gray-400">{rr.coin.symbol}</div>
+                  </div>
+                </div>
+                <div className="shrink-0 text-right">
+                  <div className="font-medium tabular-nums">${money(rr.currentValue)}</div>
+                  <div className={`text-xs tabular-nums ${rr.profit >= 0 ? "text-green-500" : "text-red-500"}`}>
+                    ${money(rr.profit)} ({rr.profitPercent.toFixed(2)}%)
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <div className="text-xs text-gray-400">Amount</div>
+                  {editing ? (
+                    <input
+                      type="number"
+                      step="any"
+                      min={0}
+                      value={editAmount}
+                      onChange={(e) => setEditAmount(e.target.value)}
+                      className="min-h-11 w-full rounded border border-gray-500 bg-transparent p-2 text-base"
+                    />
+                  ) : (
+                    <div className="font-medium">{money(h.amount)}</div>
+                  )}
+                </div>
+                <div>
+                  <div className="text-xs text-gray-400">Buy price</div>
+                  {editing ? (
+                    <input
+                      type="number"
+                      step="any"
+                      min={0}
+                      value={editBuyPrice}
+                      onChange={(e) => setEditBuyPrice(e.target.value)}
+                      className="min-h-11 w-full rounded border border-gray-500 bg-transparent p-2 text-base"
+                    />
+                  ) : (
+                    <div className="font-medium">${money(h.buyPrice)}</div>
+                  )}
+                </div>
+                <div className="col-span-2">
+                  <div className="text-xs text-gray-400">Current price</div>
+                  <div className="font-medium">${money(rr.currentPrice)}</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {editing ? (
+                  <>
+                    <button
+                      onClick={() => handleSave(h.id)}
+                      disabled={actionBusy}
+                      className="min-h-11 rounded-lg border border-gray-500 px-2 py-1"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditingId(null)}
+                      disabled={actionBusy}
+                      className="min-h-11 rounded-lg border border-gray-500 px-2 py-1"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        setEditingId(h.id);
+                        setEditAmount(String(h.amount));
+                        setEditBuyPrice(String(h.buyPrice));
+                      }}
+                      disabled={actionBusy || editingId !== null}
+                      className="min-h-11 rounded-lg border border-gray-500 px-2 py-1"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(h.id)}
+                      disabled={actionBusy}
+                      className="min-h-11 rounded-lg border border-gray-500 px-2 py-1"
+                    >
+                      Delete
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       {alloc.length > 0 && (
         <div className="mt-6">
           <h2 className="mb-2 text-xl font-semibold">Allocation</h2>
           <div className="flex flex-col gap-4 md:flex-row md:items-start">
             {donutAlloc.length > 0 && (
-              <div className="flex flex-col items-center gap-3 md:flex-row md:items-center">
+              <div className="flex w-full flex-col items-center gap-3 md:w-auto md:flex-row md:items-center">
                 <div className="relative" style={{ width: 180, height: 180 }}>
                   <svg
                     viewBox="0 0 42 42"
@@ -674,15 +929,15 @@ export default function PortfolioPage() {
                     </span>
                   </div>
                 </div>
-                <ul className="space-y-1 text-sm">
+                <ul className="w-full space-y-1 text-sm md:w-auto">
                   {donutAlloc.map((d, i) => (
                     <li key={`${d.name}-${i}`} className="flex items-center gap-2">
                       <span
-                        className="inline-block h-3 w-3 rounded-full"
+                        className="inline-block h-3 w-3 shrink-0 rounded-full"
                         style={{ backgroundColor: d.color }}
                       />
-                      <span>{d.name}</span>
-                      <span className="text-gray-400">{d.percent.toFixed(2)}%</span>
+                      <span className="min-w-0 flex-1 truncate">{d.name}</span>
+                      <span className="shrink-0 text-gray-400">{d.percent.toFixed(2)}%</span>
                     </li>
                   ))}
                 </ul>
