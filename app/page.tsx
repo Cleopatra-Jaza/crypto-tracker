@@ -44,7 +44,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [currency, setCurrency] = useCurrency();
+  const [currency] = useCurrency();
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [showWatchlist, setShowWatchlist] = useState(false);
@@ -332,7 +332,7 @@ export default function Home() {
           className={`rounded-lg border px-4 py-2 ${
             !showWatchlist
               ? "border-green-500 bg-green-500 text-black"
-              : "border-gray-500"
+              : "border-[var(--input-border)]"
           }`}
         >
           All Coins
@@ -342,7 +342,7 @@ export default function Home() {
           className={`rounded-lg border px-4 py-2 ${
             showWatchlist
               ? "border-green-500 bg-green-500 text-black"
-              : "border-gray-500"
+              : "border-[var(--input-border)]"
           }`}
         >
           ⭐ Watchlist ({watchlist.length})
@@ -350,12 +350,12 @@ export default function Home() {
       </div>
 
       {!signedIn && loaded && (
-        <p className="mb-4 text-sm text-gray-400">
+        <p className="mb-4 text-sm text-[var(--muted)]">
           Sign in to sync your watchlist across devices.
         </p>
       )}
       {watchlistError && (
-        <p className="mb-4 text-sm text-red-500">{watchlistError}</p>
+        <p className="mb-4 text-sm text-red-700 dark:text-red-500">{watchlistError}</p>
       )}
 
       <input
@@ -363,7 +363,7 @@ export default function Home() {
         placeholder="Search coin (bitcoin, eth...)"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="mb-4 w-full rounded-lg border border-gray-400 bg-transparent p-3"
+        className="mb-4 w-full rounded-lg border border-[var(--input-border)] bg-transparent p-3"
       />
 
       {loading ? (
@@ -371,36 +371,36 @@ export default function Home() {
           <table className="min-w-[760px] md:min-w-0 md:w-full text-left">
             <tbody>
               {Array.from({ length: 10 }).map((_, i) => (
-                <tr key={i} className="border-b border-gray-700">
+                <tr key={i} className="border-b border-[var(--card-border)]">
                   <td className="p-2 md:p-3 w-10 min-w-10 sticky left-0 z-10 bg-[var(--background)] md:static">
-                    <div className="h-5 w-5 animate-pulse rounded bg-gray-700" />
+                    <div className="h-5 w-5 animate-pulse rounded bg-[var(--skeleton)]" />
                   </td>
                   <td className="p-2 md:p-3 text-sm md:text-base whitespace-nowrap">
-                    <div className="h-4 w-6 animate-pulse rounded bg-gray-700" />
+                    <div className="h-4 w-6 animate-pulse rounded bg-[var(--skeleton)]" />
                   </td>
                   <td className="p-2 md:p-3 text-sm md:text-base">
                     <div className="flex items-center gap-3">
-                      <div className="h-6 w-6 animate-pulse rounded-full bg-gray-700" />
-                      <div className="h-4 w-24 animate-pulse rounded bg-gray-700" />
+                      <div className="h-6 w-6 animate-pulse rounded-full bg-[var(--skeleton)]" />
+                      <div className="h-4 w-24 animate-pulse rounded bg-[var(--skeleton)]" />
                     </div>
                   </td>
                   <td className="p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap">
-                    <div className="ml-auto h-4 w-16 animate-pulse rounded bg-gray-700" />
+                    <div className="ml-auto h-4 w-16 animate-pulse rounded bg-[var(--skeleton)]" />
                   </td>
                   <td className="p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap">
-                    <div className="ml-auto h-4 w-12 animate-pulse rounded bg-gray-700" />
+                    <div className="ml-auto h-4 w-12 animate-pulse rounded bg-[var(--skeleton)]" />
                   </td>
                   <td className="p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap">
-                    <div className="ml-auto h-4 w-12 animate-pulse rounded bg-gray-700" />
+                    <div className="ml-auto h-4 w-12 animate-pulse rounded bg-[var(--skeleton)]" />
                   </td>
                   <td className="p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap">
-                    <div className="ml-auto h-4 w-12 animate-pulse rounded bg-gray-700" />
+                    <div className="ml-auto h-4 w-12 animate-pulse rounded bg-[var(--skeleton)]" />
                   </td>
                   <td className="p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap">
-                    <div className="ml-auto h-4 w-16 animate-pulse rounded bg-gray-700" />
+                    <div className="ml-auto h-4 w-16 animate-pulse rounded bg-[var(--skeleton)]" />
                   </td>
                   <td className="p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap">
-                    <div className="ml-auto h-4 w-16 animate-pulse rounded bg-gray-700" />
+                    <div className="ml-auto h-4 w-16 animate-pulse rounded bg-[var(--skeleton)]" />
                   </td>
                 </tr>
               ))}
@@ -408,9 +408,9 @@ export default function Home() {
           </table>
         </div>
       ) : null}
-      {error && <p className="text-red-500">Error: {error}</p>}
+      {error && <p className="text-red-700 dark:text-red-500">Error: {error}</p>}
       {showWatchlist && watchlist.length === 0 && (
-        <p className="text-gray-400">
+        <p className="text-[var(--muted)]">
           Watchlist empty. Coin pakkathula irukkra ☆ click pannunga.
         </p>
       )}
@@ -420,7 +420,7 @@ export default function Home() {
       <div className="overflow-x-auto w-full min-w-0 hidden md:block">
         <table className="min-w-[760px] md:min-w-0 md:w-full text-left">
           <thead>
-            <tr className="border-b border-gray-500">
+            <tr className="border-b border-[var(--card-border)]">
               <th className="p-2 md:p-3 w-10 min-w-10 sticky left-0 z-10 bg-[var(--background)] md:static"></th>
               <th className="p-2 md:p-3 text-sm md:text-base whitespace-nowrap sticky left-10 z-10 bg-[var(--background)] md:static">#</th>
               <th
@@ -471,7 +471,7 @@ export default function Home() {
               const pct7 = coin.price_change_percentage_7d_in_currency;
               const pct30 = coin.price_change_percentage_30d_in_currency;
               return (
-                <tr key={coin.id} className="border-b border-gray-700">
+                <tr key={coin.id} className="border-b border-[var(--card-border)]">
                   <td className="p-2 md:p-3 w-10 min-w-10 sticky left-0 z-10 bg-[var(--background)] md:static whitespace-nowrap">
                     <button
                       onClick={() => toggleWatch(coin.id)}
@@ -482,7 +482,7 @@ export default function Home() {
                     </button>
                   </td>
                   <td className="p-2 md:p-3 text-sm md:text-base whitespace-nowrap">{coin.market_cap_rank ?? "-"}</td>
-                  <td className="p-2 md:p-3 sticky left-10 z-10 bg-[var(--background)] md:static border-r border-gray-700">
+                  <td className="p-2 md:p-3 sticky left-10 z-10 bg-[var(--background)] md:static border-r border-[var(--card-border)]">
                     <div className="flex items-center gap-3">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={coin.image} alt={coin.name} className="h-6 w-6 shrink-0" />
@@ -492,7 +492,7 @@ export default function Home() {
                       >
                         {coin.name}
                       </Link>
-                      <span className="text-sm uppercase text-gray-400 shrink-0">
+                      <span className="text-sm uppercase text-[var(--muted)] shrink-0">
                         {coin.symbol}
                       </span>
                     </div>
@@ -500,9 +500,9 @@ export default function Home() {
                   <td
                     className={`p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap transition-colors duration-500 ${
                       flash[coin.id] === "up"
-                        ? "bg-green-500/20 text-green-500"
+                        ? "bg-green-500/20 text-green-700 dark:text-green-500"
                         : flash[coin.id] === "down"
-                        ? "bg-red-500/20 text-red-500"
+                        ? "bg-red-500/20 text-red-700 dark:text-red-500"
                         : ""
                     }`}
                   >
@@ -510,7 +510,7 @@ export default function Home() {
                   </td>
                   <td
                     className={`p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap ${
-                      change >= 0 ? "text-green-500" : "text-red-500"
+                      change >= 0 ? "text-green-700 dark:text-green-500" : "text-red-700 dark:text-red-500"
                     }`}
                   >
                     {change.toFixed(2)}%
@@ -520,8 +520,8 @@ export default function Home() {
                       pct7 == null
                         ? ""
                         : pct7 >= 0
-                        ? "text-green-500"
-                        : "text-red-500"
+                        ? "text-green-700 dark:text-green-500"
+                        : "text-red-700 dark:text-red-500"
                     }`}
                   >
                     {pct7 == null ? "-" : `${pct7.toFixed(2)}%`}
@@ -531,8 +531,8 @@ export default function Home() {
                       pct30 == null
                         ? ""
                         : pct30 >= 0
-                        ? "text-green-500"
-                        : "text-red-500"
+                        ? "text-green-700 dark:text-green-500"
+                        : "text-red-700 dark:text-red-500"
                     }`}
                   >
                     {pct30 == null ? "-" : `${pct30.toFixed(2)}%`}
@@ -549,7 +549,7 @@ export default function Home() {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-xs text-gray-400 md:hidden">Swipe the table sideways to see more columns.</p>
+      <p className="mt-2 text-xs text-[var(--muted)] md:hidden">Swipe the table sideways to see more columns.</p>
       </>
       )}
 
@@ -579,25 +579,25 @@ export default function Home() {
         <div className="mb-6 hidden md:block">
           <h2 className="mb-2 text-xl font-semibold">More coins</h2>
           {searchLoading ? (
-            <div className="animate-pulse h-4 w-24 rounded bg-gray-700" />
+            <div className="animate-pulse h-4 w-24 rounded bg-[var(--skeleton)]" />
           ) : searchError ? (
-            <p className="mb-2 text-sm text-red-500">Search failed: {searchError}</p>
+            <p className="mb-2 text-sm text-red-700 dark:text-red-500">Search failed: {searchError}</p>
           ) : searchResults.length === 0 ? (
-            <p className="mb-2 text-sm text-gray-400">No other coins found</p>
+            <p className="mb-2 text-sm text-[var(--muted)]">No other coins found</p>
           ) : (
             <ul className="space-y-1">
               {searchResults
                 .filter((r) => !coins.some((c) => c.id === r.id))
                 .map((r) => (
-                  <li key={r.id} className="p-3 border-b border-gray-700 flex items-center gap-3">
+                  <li key={r.id} className="p-3 border-b border-[var(--card-border)] flex items-center gap-3">
                     <Link href={`/coin/${r.id}`} className="flex items-center gap-3">
                       {r.thumb ? (
                         <img src={r.thumb} alt={r.name} className="h-6 w-6 rounded-full" />
                       ) : (
-                        <div className="h-6 w-6 rounded-full bg-gray-700 animate-pulse" />
+                        <div className="h-6 w-6 rounded-full bg-[var(--skeleton)] animate-pulse" />
                       )}
                       <span className="font-medium">{r.name}</span>
-                      <span className="text-sm uppercase text-gray-400">{r.symbol}</span>
+                      <span className="text-sm uppercase text-[var(--muted)]">{r.symbol}</span>
                       {r.rank != null && (
                         <span className="ml-2 text-xs text-gray-500">#{r.rank}</span>
                       )}

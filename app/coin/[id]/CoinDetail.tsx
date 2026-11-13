@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useCurrency } from "@/lib/useCurrency";
+import useIsDark from "@/lib/useTheme";
 import { formatMoney, formatCompactMoney } from "@/lib/currency";
 import { sma, rsi, macd, type Point } from "@/lib/indicators";
 import {
@@ -59,6 +60,7 @@ type ChartData =
 export default function CoinDetail({ id }: { id: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currency] = useCurrency();
+  const isDark = useIsDark();
   const [range, setRange] = useState<RangeKey>("7d");
   const [chartType, setChartType] = useState<"line" | "candles">("line");
   const [showSMA20, setShowSMA20] = useState(false);
@@ -221,29 +223,36 @@ export default function CoinDetail({ id }: { id: string }) {
     if (chartData.type === "line" && chartData.prices.length === 0) return;
     if (chartData.type === "candles" && chartData.candles.length === 0) return;
 
-    let hints: string[] = [];
-    const hasIndicators = showSMA20 || showSMA50 || showRSI || showMACD;
-    const chartHeight = hasIndicators && (showRSI || showMACD) ? 520 : 400;
+    const hints: string[] = [];
 
     const chart = createChart(containerRef.current, {
-      height: chartHeight,
+      autoSize: true,
       localization: {
         priceFormatter: (p: number) => formatMoney(p, displayCurrency),
       },
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
-        textColor: "#9ca3af",
+        textColor: isDark ? "#9ca3af" : "#374151",
       },
       grid: {
-        vertLines: { color: "#374151" },
-        horzLines: { color: "#374151" },
+        vertLines: { color: isDark ? "#374151" : "#e5e7eb" },
+        horzLines: { color: isDark ? "#374151" : "#e5e7eb" },
       },
-      timeScale:
-        range === "1h"
+      crosshair: {
+        vertLine: { color: isDark ? "#6b7280" : "#9ca3af" },
+        horzLine: { color: isDark ? "#6b7280" : "#9ca3af" },
+      },
+      rightPriceScale: {
+        borderColor: isDark ? "#374151" : "#d1d5db",
+      },
+      timeScale: {
+        borderColor: isDark ? "#374151" : "#d1d5db",
+        ...(range === "1h"
           ? { timeVisible: true, secondsVisible: false }
           : range === "all"
             ? { timeVisible: false, secondsVisible: false }
-            : { timeVisible: range === "1d" || range === "7d" },
+            : { timeVisible: range === "1d" || range === "7d" }),
+      },
     });
 
     // Close prices for indicators
@@ -416,7 +425,7 @@ export default function CoinDetail({ id }: { id: string }) {
         const signalLine = chart.addSeries(
           LineSeries,
           {
-            color: "#f59e0b",
+          color: isDark ? "#f59e0b" : "#b45309",
             lineWidth: 1,
             priceLineVisible: false,
             lastValueVisible: true,
@@ -441,8 +450,7 @@ export default function CoinDetail({ id }: { id: string }) {
     setIndicatorHint(hints.length > 0 ? `Not enough data for this range: ${hints.join(", ")}` : "");
     chart.timeScale().fitContent();
     return () => chart.remove();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chartData, range, currency, chartType, chartKey, showSMA20, showSMA50, showRSI, showMACD, displayCurrency]);
+  }, [chartData, range, currency, chartType, chartKey, showSMA20, showSMA50, showRSI, showMACD, displayCurrency, isDark]);
 
   const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 2 });
 
@@ -486,43 +494,59 @@ export default function CoinDetail({ id }: { id: string }) {
     ) {
       const v = details?.[key as keyof typeof details];
       const n = typeof v === "number" && Number.isFinite(v) ? v : null;
-      if (n == null) return "text-gray-400";
-      return n >= 0 ? "text-green-500" : "text-red-500";
+      if (n == null) return "text-[var(--muted)]";
+      return n >= 0 ? "text-green-700 dark:text-green-500" : "text-red-700 dark:text-red-500";
     }
-    return "text-gray-300";
+    return "text-[var(--foreground)]";
   }
 
   const plainText = (details?.description ?? "").replace(/<[^>]*>/g, "");
   const truncated = plainText.length > 600 ? plainText.slice(0, 600) + "..." : plainText;
 
   return (
-    <main className="mx-auto max-w-4xl p-6">
-      <Link href="/" className="text-sm text-gray-400 hover:underline">
+    <main className="mx-auto max-w-4xl w-full min-w-0 px-4 py-6 pb-24 md:px-6 md:py-6 md:pb-0">
+      <Link href="/" className="inline-flex min-h-11 items-center text-sm text-[var(--muted)] hover:underline">
         ← Back
       </Link>
 
-      <div className="mb-4 flex flex-col md:flex-row md:items-center gap-4">
-        <div className="flex items-center gap-3">
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+        <div className="flex min-w-0 items-center gap-3">
           {details?.image ? (
-            <img src={details.image} alt={details.name ?? id} className="h-12 w-12 rounded" />
+            <img src={details.image} alt={details.name ?? id} className="h-10 w-10 shrink-0 rounded md:h-12 md:w-12" />
           ) : (
-            <div className="h-12 w-12 rounded bg-gray-700 animate-pulse" />
+            <div className="h-10 w-10 shrink-0 rounded bg-[var(--skeleton)] animate-pulse md:h-12 md:w-12" />
           )}
-          <div>
-            <h1 className="text-3xl font-bold">
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-medium md:text-3xl md:font-bold">
               {details?.name ?? (chartLoading ? <span className="animate-pulse" /> : id)}
             </h1>
-            <p className="text-sm uppercase text-gray-400">
+            <p className="truncate text-xs uppercase text-[var(--muted)] md:text-sm">
               {details?.symbol?.toUpperCase() ?? ""}
               {details?.rank != null && (
-                <span className="ml-2 text-xs text-gray-500">Rank #{details.rank}</span>
+                <span className="ml-2 text-xs text-[var(--muted)]">Rank #{details.rank}</span>
               )}
             </p>
           </div>
         </div>
+        {details?.price != null && (
+          <div className="flex items-baseline gap-2 md:hidden">
+            <span className="text-3xl font-medium tabular-nums">
+              {formatMoney(details.price, displayCurrency)}
+            </span>
+            {details.change24h != null && (
+              <span
+                className={`text-sm font-medium ${
+                  details.change24h >= 0 ? "text-green-700 dark:text-green-500" : "text-red-700 dark:text-red-500"
+                }`}
+              >
+                {details.change24h.toFixed(2)}%
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="mb-4 flex gap-2 flex-wrap">
+      <div className="mb-4 flex gap-2 overflow-x-auto w-full min-w-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {RANGES.map((r) => {
           const isBin = r.key === "1h" || r.key === "all";
           const disabled = isBin && !binanceEnabled;
@@ -534,33 +558,33 @@ export default function CoinDetail({ id }: { id: string }) {
               }}
               disabled={disabled}
               title={disabled ? "Only available for top coins listed on Binance" : undefined}
-              className={`rounded-lg border px-4 py-2 ${
+              className={`shrink-0 whitespace-nowrap min-h-11 rounded-lg border px-4 py-2 md:min-h-0 ${
                 range === r.key
                   ? "border-green-500 bg-green-500 text-black"
-                  : "border-gray-500"
+                  : "border-[var(--input-border)]"
               } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               {r.label}
             </button>
           );
         })}
-        <div className="ml-2 flex gap-1">
+        <div className="ml-2 flex shrink-0 gap-1">
           <button
             onClick={() => setChartType("line")}
-            className={`rounded-lg border px-4 py-2 ${
+            className={`shrink-0 whitespace-nowrap min-h-11 rounded-lg border px-4 py-2 md:min-h-0 ${
               chartType === "line"
                 ? "border-green-500 bg-green-500 text-black"
-                : "border-gray-500"
+                : "border-[var(--input-border)]"
             }`}
           >
             Line
           </button>
           <button
             onClick={() => setChartType("candles")}
-            className={`rounded-lg border px-4 py-2 ${
+            className={`shrink-0 whitespace-nowrap min-h-11 rounded-lg border px-4 py-2 md:min-h-0 ${
               chartType === "candles"
                 ? "border-green-500 bg-green-500 text-black"
-                : "border-gray-500"
+                : "border-[var(--input-border)]"
             }`}
           >
             Candles
@@ -569,64 +593,64 @@ export default function CoinDetail({ id }: { id: string }) {
       </div>
 
       {isBinanceRange && (
-        <p className="mb-2 text-xs text-gray-400">
+        <p className="mb-2 text-xs text-[var(--muted)]">
           1H and All use Binance prices in USD (USDT).
         </p>
       )}
 
-      <div className="mb-4 flex gap-2 flex-wrap">
+      <div className="mb-4 flex gap-2 overflow-x-auto w-full min-w-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <button
           onClick={() => setShowSMA20((v) => !v)}
-          className={`rounded-lg border px-3 py-1 text-sm ${
-            showSMA20 ? "border-yellow-500 bg-yellow-500 text-black" : "border-gray-500"
+          className={`shrink-0 whitespace-nowrap min-h-11 rounded-lg border px-3 py-1 text-sm md:min-h-0 ${
+            showSMA20 ? "border-yellow-500 bg-yellow-500 text-black" : "border-[var(--input-border)]"
           }`}
         >
           SMA 20
         </button>
         <button
           onClick={() => setShowSMA50((v) => !v)}
-          className={`rounded-lg border px-3 py-1 text-sm ${
-            showSMA50 ? "border-blue-500 bg-blue-500 text-black" : "border-gray-500"
+          className={`shrink-0 whitespace-nowrap min-h-11 rounded-lg border px-3 py-1 text-sm md:min-h-0 ${
+            showSMA50 ? "border-blue-500 bg-blue-500 text-black" : "border-[var(--input-border)]"
           }`}
         >
           SMA 50
         </button>
         <button
           onClick={() => setShowRSI((v) => !v)}
-          className={`rounded-lg border px-3 py-1 text-sm ${
-            showRSI ? "border-purple-500 bg-purple-500 text-black" : "border-gray-500"
+          className={`shrink-0 whitespace-nowrap min-h-11 rounded-lg border px-3 py-1 text-sm md:min-h-0 ${
+            showRSI ? "border-purple-500 bg-purple-500 text-black" : "border-[var(--input-border)]"
           }`}
         >
           RSI
         </button>
         <button
           onClick={() => setShowMACD((v) => !v)}
-          className={`rounded-lg border px-3 py-1 text-sm ${
-            showMACD ? "border-cyan-500 bg-cyan-500 text-black" : "border-gray-500"
+          className={`shrink-0 whitespace-nowrap min-h-11 rounded-lg border px-3 py-1 text-sm md:min-h-0 ${
+            showMACD ? "border-cyan-500 bg-cyan-500 text-black" : "border-[var(--input-border)]"
           }`}
         >
           MACD
         </button>
       </div>
 
-      {indicatorHint && <p className="mb-2 text-sm text-gray-400">{indicatorHint}</p>}
+      {indicatorHint && <p className="mb-2 text-sm text-[var(--muted)]">{indicatorHint}</p>}
 
       {chartLoading ? (
-        <div className="h-[400px] w-full animate-pulse rounded bg-gray-700" />
+        <div className={`w-full animate-pulse rounded bg-[var(--skeleton)] ${showRSI || showMACD ? "h-[480px] md:h-[520px]" : "h-[300px] md:h-[400px]"}`} />
       ) : chartError ? (
-        <div className="h-[400px] w-full rounded bg-gray-800 flex flex-col items-center justify-center gap-4">
-          <p className="text-red-500">{chartError}</p>
+        <div className={`w-full rounded bg-[var(--card-bg)] flex flex-col items-center justify-center gap-4 ${showRSI || showMACD ? "h-[480px] md:h-[520px]" : "h-[300px] md:h-[400px]"}`}>
+          <p className="text-red-700 dark:text-red-500">{chartError}</p>
           <div className="flex gap-2">
             <button
               onClick={() => setRetry((r) => r + 1)}
-              className="rounded-lg border border-gray-500 px-4 py-2"
+              className="min-h-11 rounded-lg border border-[var(--input-border)] px-4 py-2 md:min-h-0"
             >
               Try again
             </button>
             {isBinanceRange && (
               <button
                 onClick={() => setRange("7d")}
-                className="rounded-lg border border-gray-500 px-4 py-2 text-sm"
+                className="min-h-11 rounded-lg border border-[var(--input-border)] px-4 py-2 text-sm md:min-h-0"
               >
                 Switch to 7D
               </button>
@@ -634,17 +658,17 @@ export default function CoinDetail({ id }: { id: string }) {
           </div>
         </div>
       ) : (
-        <div ref={containerRef} className="w-full" />
+        <div ref={containerRef} className={`w-full min-w-0 ${showRSI || showMACD ? "h-[480px] md:h-[520px]" : "h-[300px] md:h-[400px]"}`} />
       )}
 
       {!detailsError && details ? (
-        <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
           {STATS.map((s) => {
             const val = statValue(s.key);
             return (
-              <div key={s.key} className="p-3 rounded bg-gray-800 border border-gray-700">
-                <p className="text-xs text-gray-400">{s.label}</p>
-                <p className={`text-sm font-medium ${statColor(s.key)}`}>{val}</p>
+              <div key={s.key} className="p-3 rounded bg-[var(--card-bg)] border border-[var(--card-border)] md:p-3">
+                <p className="text-xs text-[var(--muted)]">{s.label}</p>
+                <p className={`truncate text-sm font-medium ${statColor(s.key)}`}>{val}</p>
               </div>
             );
           })}
@@ -654,13 +678,13 @@ export default function CoinDetail({ id }: { id: string }) {
       {!detailsError && details ? (
         <div className="mt-6">
           <h2 className="mb-2 text-xl font-semibold">About</h2>
-          <p className="mb-2 text-gray-300 max-w-2xl">
+          <p className="mb-2 max-w-2xl text-sm leading-relaxed text-[var(--foreground)] md:text-base">
             {expanded ? plainText : truncated}
           </p>
           {plainText.length > 600 && (
             <button
               onClick={() => setExpanded((e) => !e)}
-              className="text-sm text-blue-500 underline"
+              className="min-h-11 text-sm text-blue-500 underline md:min-h-0"
             >
               {expanded ? "Show less" : "Read more"}
             </button>
@@ -670,7 +694,7 @@ export default function CoinDetail({ id }: { id: string }) {
               href={details.homepage}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 inline-block text-sm text-blue-500 underline"
+              className="mt-2 inline-flex min-h-11 items-center text-sm text-blue-500 underline md:min-h-0"
             >
               Website
             </a>

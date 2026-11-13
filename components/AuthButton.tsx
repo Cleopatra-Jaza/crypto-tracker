@@ -25,7 +25,7 @@ export default async function AuthButton() {
         >
           <button
             type="submit"
-            className="rounded-lg border border-gray-500 px-2 py-1 text-sm min-h-10 md:min-h-0 md:px-4 md:py-2"
+            className="rounded-lg border border-[var(--input-border)] px-2 py-1 text-sm min-h-10 md:min-h-0 md:px-4 md:py-2"
           >
             Sign out
           </button>
@@ -37,11 +37,11 @@ export default async function AuthButton() {
   return (
     <details className="relative">
       <summary
-        className="rounded-lg border border-gray-500 px-3 py-1 text-sm min-h-10 md:min-h-0 md:px-4 md:py-2 list-none cursor-pointer"
+        className="rounded-lg border border-[var(--input-border)] px-3 py-1 text-sm min-h-10 md:min-h-0 md:px-4 md:py-2 list-none cursor-pointer"
       >
         Sign in
       </summary>
-      <div className="absolute right-0 mt-2 w-56 max-w-[calc(100vw-2rem)] rounded-lg border border-gray-500 bg-white text-black dark:bg-neutral-900 dark:text-white p-2 z-50 flex flex-col gap-2">
+      <div className="absolute right-0 mt-2 w-56 max-w-[calc(100vw-2rem)] rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] p-2 z-50 flex flex-col gap-2">
         <form
           action={async () => {
             "use server";
@@ -50,7 +50,7 @@ export default async function AuthButton() {
         >
           <button
             type="submit"
-            className="w-full text-left rounded-lg border-none bg-transparent px-2 py-2 hover:bg-gray-100 dark:hover:bg-neutral-800 text-sm"
+            className="w-full text-left rounded-lg border-none bg-transparent px-2 py-2 hover:bg-[var(--hover-bg)] text-sm"
           >
             Continue with GitHub
           </button>

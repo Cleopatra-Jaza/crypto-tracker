@@ -67,7 +67,7 @@ export default function BottomNav() {
         bottom: 0,
         zIndex: 50,
         background: "var(--background)",
-        borderTop: "1px solid #e5e7eb",
+        borderTop: "1px solid var(--card-border)",
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
@@ -87,7 +87,7 @@ export default function BottomNav() {
                   justifyContent: "center",
                   gap: 4,
                   fontSize: 11,
-                  color: active ? "#22c55e" : "#9ca3af",
+                  color: active ? "#22c55e" : "var(--muted)",
                   textDecoration: "none",
                 }}
               >

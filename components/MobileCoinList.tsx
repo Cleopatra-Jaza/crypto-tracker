@@ -123,18 +123,18 @@ export default function MobileCoinList({
 
   function RowSkeleton() {
     return (
-      <div className="flex items-center gap-3 border-b border-gray-700 py-3 min-h-[64px] animate-pulse">
-        <div className="h-4 w-6 rounded bg-gray-700" />
-        <div className="h-8 w-8 rounded-full bg-gray-700 shrink-0" />
+      <div className="flex items-center gap-3 border-b border-[var(--card-border)] py-3 min-h-[64px] animate-pulse">
+        <div className="h-4 w-6 rounded bg-[var(--skeleton)]" />
+        <div className="h-8 w-8 rounded-full bg-[var(--skeleton)] shrink-0" />
         <div className="min-w-0 flex-1 space-y-2">
-          <div className="h-4 w-24 rounded bg-gray-700" />
-          <div className="h-3 w-32 rounded bg-gray-700" />
+          <div className="h-4 w-24 rounded bg-[var(--skeleton)]" />
+          <div className="h-3 w-32 rounded bg-[var(--skeleton)]" />
         </div>
         <div className="text-right space-y-2">
-          <div className="ml-auto h-4 w-16 rounded bg-gray-700" />
-          <div className="ml-auto h-3 w-12 rounded bg-gray-700" />
+          <div className="ml-auto h-4 w-16 rounded bg-[var(--skeleton)]" />
+          <div className="ml-auto h-3 w-12 rounded bg-[var(--skeleton)]" />
         </div>
-        <div className="h-11 w-11 rounded bg-gray-700" />
+        <div className="h-11 w-11 rounded bg-[var(--skeleton)]" />
       </div>
     );
   }
@@ -145,7 +145,7 @@ export default function MobileCoinList({
         <button
           onClick={() => setShowWatchlist(false)}
           className={`flex-1 min-h-11 rounded-lg border ${
-            !showWatchlist ? "border-green-500 bg-green-500 text-black" : "border-gray-500"
+            !showWatchlist ? "border-green-500 bg-green-500 text-black" : "border-[var(--input-border)]"
           }`}
         >
           All Coins
@@ -153,7 +153,7 @@ export default function MobileCoinList({
         <button
           onClick={() => setShowWatchlist(true)}
           className={`flex-1 min-h-11 rounded-lg border ${
-            showWatchlist ? "border-green-500 bg-green-500 text-black" : "border-gray-500"
+            showWatchlist ? "border-green-500 bg-green-500 text-black" : "border-[var(--input-border)]"
           }`}
         >
           ⭐ Watchlist ({watchlistCount})
@@ -165,7 +165,7 @@ export default function MobileCoinList({
         placeholder="Search coin (bitcoin, eth...)"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="mb-3 w-full min-h-11 rounded-lg border border-gray-400 bg-transparent p-3"
+        className="mb-3 w-full min-h-11 rounded-lg border border-[var(--input-border)] bg-transparent p-3"
       />
 
       <div className="mb-3 flex gap-1">
@@ -174,7 +174,7 @@ export default function MobileCoinList({
             key={p}
             onClick={() => setPeriod(p)}
             className={`rounded-lg border px-3 py-1 text-sm ${
-              period === p ? "border-green-500 bg-green-500 text-black" : "border-gray-500"
+              period === p ? "border-green-500 bg-green-500 text-black" : "border-[var(--input-border)]"
             }`}
           >
             {p}
@@ -186,7 +186,7 @@ export default function MobileCoinList({
         <button
           onClick={() => handleSortChip("market_cap")}
           className={`rounded-full border px-3 py-1 text-sm ${
-            isSortActive("market_cap") ? "border-green-500 bg-green-500 text-black" : "border-gray-500"
+            isSortActive("market_cap") ? "border-green-500 bg-green-500 text-black" : "border-[var(--input-border)]"
           }`}
         >
           Market cap{marketCapArrow}
@@ -194,7 +194,7 @@ export default function MobileCoinList({
         <button
           onClick={() => handleSortChip("current_price")}
           className={`rounded-full border px-3 py-1 text-sm ${
-            isSortActive("current_price") ? "border-green-500 bg-green-500 text-black" : "border-gray-500"
+            isSortActive("current_price") ? "border-green-500 bg-green-500 text-black" : "border-[var(--input-border)]"
           }`}
         >
           Price{priceArrow}
@@ -202,7 +202,7 @@ export default function MobileCoinList({
         <button
           onClick={() => handleSortChip("change")}
           className={`rounded-full border px-3 py-1 text-sm ${
-            isSortActive("change") ? "border-green-500 bg-green-500 text-black" : "border-gray-500"
+            isSortActive("change") ? "border-green-500 bg-green-500 text-black" : "border-[var(--input-border)]"
           }`}
         >
           Change{changeArrow}
@@ -221,7 +221,7 @@ export default function MobileCoinList({
             const starred = watchlist.includes(coin.id);
             const pct = percentFor(coin);
             const changeColor =
-              pct == null ? "text-gray-400" : pct >= 0 ? "text-green-500" : "text-red-500";
+              pct == null ? "text-[var(--muted)]" : pct >= 0 ? "text-green-500" : "text-red-700 dark:text-red-500";
             const pctText = pct == null ? "-" : `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%`;
             const flashClass =
               flash[coin.id] === "up"
@@ -230,14 +230,14 @@ export default function MobileCoinList({
                 ? "bg-red-500/20"
                 : "";
             return (
-              <div key={coin.id} className={`flex items-center gap-3 border-b border-gray-700 py-3 min-h-[64px] ${flashClass}`}>
+              <div key={coin.id} className={`flex items-center gap-3 border-b border-[var(--card-border)] py-3 min-h-[64px] ${flashClass}`}>
                 <Link href={`/coin/${coin.id}`} className="flex flex-1 items-center gap-3 min-w-0">
-                  <span className="w-6 shrink-0 text-xs text-gray-400">{coin.market_cap_rank ?? "-"}</span>
+                  <span className="w-6 shrink-0 text-xs text-[var(--muted)]">{coin.market_cap_rank ?? "-"}</span>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={coin.image} alt={coin.name} className="h-8 w-8 shrink-0 rounded-full" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-medium">{coin.name}</div>
-                    <div className="truncate text-xs text-gray-400">
+                    <div className="truncate text-xs text-[var(--muted)]">
                       {coin.symbol.toUpperCase()} · {formatCompactMoney(coin.market_cap, currency)}
                     </div>
                   </div>
@@ -260,20 +260,20 @@ export default function MobileCoinList({
       )}
 
       {showWatchlist && watchlist.length === 0 && (
-        <p className="text-gray-400">Watchlist empty.</p>
+        <p className="text-[var(--muted)]">Watchlist empty.</p>
       )}
 
-      {watchlistError && <p className="text-sm text-red-500">{watchlistError}</p>}
+      {watchlistError && <p className="text-sm text-red-700 dark:text-red-500">{watchlistError}</p>}
 
       {search.length >= 2 && !showWatchlist && (
         <div className="mt-4">
           <h2 className="mb-2 text-lg font-semibold">More coins</h2>
           {searchLoading ? (
-            <div className="animate-pulse h-4 w-24 rounded bg-gray-700" />
+            <div className="animate-pulse h-4 w-24 rounded bg-[var(--skeleton)]" />
           ) : searchError ? (
-            <p className="text-sm text-red-500">Search failed: {searchError}</p>
+            <p className="text-sm text-red-700 dark:text-red-500">Search failed: {searchError}</p>
           ) : searchResults.filter((r) => !coins.some((c) => c.id === r.id)).length === 0 ? (
-            <p className="text-sm text-gray-400">No other coins found</p>
+            <p className="text-sm text-[var(--muted)]">No other coins found</p>
           ) : (
             <div className="w-full min-w-0">
               {searchResults
@@ -282,17 +282,17 @@ export default function MobileCoinList({
                   <Link
                     key={r.id}
                     href={`/coin/${r.id}`}
-                    className="flex items-center gap-3 border-b border-gray-700 py-3 min-h-[64px]"
+                    className="flex items-center gap-3 border-b border-[var(--card-border)] py-3 min-h-[64px]"
                   >
-                    <span className="w-6 shrink-0 text-xs text-gray-400">{r.rank ?? "-"}</span>
+                    <span className="w-6 shrink-0 text-xs text-[var(--muted)]">{r.rank ?? "-"}</span>
                     {r.thumb ? (
                       <img src={r.thumb} alt={r.name} className="h-8 w-8 shrink-0 rounded-full" />
                     ) : (
-                      <div className="h-8 w-8 shrink-0 rounded-full bg-gray-700 animate-pulse" />
+                      <div className="h-8 w-8 shrink-0 rounded-full bg-[var(--skeleton)] animate-pulse" />
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium">{r.name}</div>
-                      <div className="truncate text-xs text-gray-400">{r.symbol.toUpperCase()}</div>
+                      <div className="truncate text-xs text-[var(--muted)]">{r.symbol.toUpperCase()}</div>
                     </div>
                   </Link>
                 ))}
