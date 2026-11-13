@@ -93,10 +93,10 @@ export default function AlertChecker() {
 
   if (toasts.length === 0) return null;
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2">
+    <div className="fixed bottom-4 left-4 right-4 z-50 flex w-auto max-w-[calc(100vw-2rem)] flex-col gap-2 md:left-auto md:right-4 md:w-80">
       {toasts.map((t) => (
         <div key={t.id} className="flex items-start justify-between gap-2 rounded-lg border border-gray-600 bg-gray-800 p-3 shadow-lg">
-          <span className="text-sm text-gray-100">{t.text}</span>
+          <span className="text-sm text-gray-100 break-words">{t.text}</span>
           <button
             onClick={() => dismiss(t.id)}
             className="shrink-0 text-gray-400 hover:text-gray-200"

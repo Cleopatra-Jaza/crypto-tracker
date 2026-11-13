@@ -39,6 +39,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#0a0a0a",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -57,18 +59,22 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="min-h-full flex flex-col">
-      <header className="relative flex items-center justify-between border-b border-gray-200 px-4 py-2">
-        <div className="flex items-center gap-4">
-          <Link href="/">Crypto Tracker</Link>
-          <Link href="/portfolio">Portfolio</Link>
-          <Link href="/compare">Compare</Link>
-          <Link href="/alerts">Alerts</Link>
+      <header className="relative flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-gray-200 px-4 py-3 md:flex-nowrap md:justify-between md:py-2">
+        <div className="flex flex-wrap items-center gap-4 min-w-0">
+          <Link href="/" className="min-w-0">Crypto Tracker</Link>
+          <nav className="flex flex-wrap items-center gap-3 text-sm md:gap-4 md:text-base">
+            <Link href="/portfolio" className="min-w-0">Portfolio</Link>
+            <Link href="/compare" className="min-w-0">Compare</Link>
+            <Link href="/alerts" className="min-w-0">Alerts</Link>
+          </nav>
         </div>
-        <Suspense fallback={null}>
-          <AuthButton />
-        </Suspense>
-        <ThemeToggle />
-        <CurrencySelect />
+        <div className="flex items-center gap-2 min-w-0 [&_button]:min-h-10 [&_select]:min-h-10 md:[&_button]:min-h-0 md:[&_select]:min-h-0">
+          <Suspense fallback={null}>
+            <AuthButton />
+          </Suspense>
+          <ThemeToggle />
+          <CurrencySelect />
+        </div>
       </header>
       {children}
       <AlertChecker />
