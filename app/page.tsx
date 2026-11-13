@@ -44,7 +44,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [currency, setCurrency] = useCurrency();
+  const [currency] = useCurrency();
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [showWatchlist, setShowWatchlist] = useState(false);

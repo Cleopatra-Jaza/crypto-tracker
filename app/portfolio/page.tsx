@@ -60,7 +60,7 @@ export default function PortfolioPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load coins");
       setCoins(data);
-    } catch (e) {
+    } catch {
       // keep previous coins if refresh fails
     }
   }
