@@ -8,6 +8,7 @@ import AuthButton from "@/components/AuthButton";
 import CurrencySelect from "@/components/CurrencySelect";
 import ThemeToggle from "@/components/ThemeToggle";
 import AlertChecker from "@/components/AlertChecker";
+import BottomNav from "@/components/BottomNav";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -59,16 +60,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="min-h-full flex flex-col">
-      <header className="relative flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-gray-200 px-4 py-3 md:flex-nowrap md:justify-between md:py-2">
-        <div className="flex flex-wrap items-center gap-4 min-w-0">
-          <Link href="/" className="min-w-0">Crypto Tracker</Link>
-          <nav className="flex flex-wrap items-center gap-3 text-sm md:gap-4 md:text-base">
-            <Link href="/portfolio" className="min-w-0">Portfolio</Link>
-            <Link href="/compare" className="min-w-0">Compare</Link>
-            <Link href="/alerts" className="min-w-0">Alerts</Link>
+      <header className="relative flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-gray-200 px-4 py-3 md:flex-nowrap md:items-center md:justify-between md:py-2">
+        <div className="flex min-w-0 items-center gap-2 md:gap-4">
+          <Link href="/" className="truncate text-base font-medium md:font-normal">
+            Crypto Tracker
+          </Link>
+          <nav className="hidden md:flex items-center gap-4">
+            <Link href="/portfolio">Portfolio</Link>
+            <Link href="/compare">Compare</Link>
+            <Link href="/alerts">Alerts</Link>
           </nav>
         </div>
-        <div className="flex items-center gap-2 min-w-0 [&_button]:min-h-10 [&_select]:min-h-10 md:[&_button]:min-h-0 md:[&_select]:min-h-0">
+        <div className="flex items-center gap-2 min-w-0 [&_button]:min-h-10 [&_select]:min-h-10 md:[&_button]:min-h-0 md:[&_select]:min-h-0 [&_select]:text-sm">
           <Suspense fallback={null}>
             <AuthButton />
           </Suspense>
@@ -76,7 +79,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <CurrencySelect />
         </div>
       </header>
-      {children}
+      <div className="pb-20 md:pb-0">
+        {children}
+      </div>
+      <BottomNav />
       <AlertChecker />
     </body>
     </html>

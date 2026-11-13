@@ -77,7 +77,8 @@ export default function MarketOverview({
   }
 
   return (
-    <div className="mb-6 grid grid-cols-1 gap-4 min-w-0 md:grid-cols-3">
+    <div className="mb-6 min-w-0">
+      <div className="hidden md:grid md:grid-cols-3 gap-4 min-w-0">
       <div className="min-w-0 rounded-lg border border-gray-700 bg-gray-800 p-4">
         <h3 className="mb-2 text-sm font-semibold text-gray-300">Fear & Greed</h3>
         {fgLoading ? (
@@ -189,5 +190,86 @@ export default function MarketOverview({
         )}
       </div>
     </div>
+
+    <div className="md:hidden space-y-3 min-w-0">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="min-w-0 rounded-lg border border-gray-700 bg-gray-800 p-3">
+          <h3 className="mb-1 text-xs font-semibold text-gray-300">Fear & Greed</h3>
+          {fgLoading ? (
+            <div className="space-y-2">
+              <div className="h-6 w-12 animate-pulse rounded bg-gray-700" />
+              <div className="h-2 w-full animate-pulse rounded bg-gray-700" />
+            </div>
+          ) : fgError || !fearGreed ? (
+            <p className="text-sm text-gray-400">Unavailable</p>
+          ) : (
+            <>
+              <div className="mb-1 flex items-baseline gap-2">
+                <span className={`text-2xl font-bold ${fgTextColor(fearGreed.value)}`}>{fearGreed.value}</span>
+                <span className={`text-xs ${fgTextColor(fearGreed.value)}`}>{fearGreed.classification}</span>
+              </div>
+              <div className="relative mt-1 h-1.5 w-full rounded bg-gray-700">
+                <div
+                  className={`absolute top-0 h-1.5 w-1.5 -translate-x-1/2 rounded-full ${fgColor(fearGreed.value)}`}
+                  style={{ left: `${Math.min(100, Math.max(0, fearGreed.value))}%` }}
+                />
+                <div className="h-1.5 rounded bg-gradient-to-r from-red-500 via-gray-400 to-green-500 opacity-40" />
+              </div>
+              <p className="mt-1 text-[11px] text-gray-500">
+                Source:{" "}
+                <a
+                  href="https://alternative.me/crypto/fear-and-greed-index/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-gray-300"
+                >
+                  alternative.me
+                </a>
+              </p>
+            </>
+          )}
+        </div>
+        <div className="min-w-0 rounded-lg border border-gray-700 bg-gray-800 p-3">
+          <h3 className="mb-1 text-xs font-semibold text-gray-300">Top gainer 24h</h3>
+          {gainers.length === 0 ? (
+            <p className="text-sm text-gray-400">No data</p>
+          ) : (
+            <Link href={`/coin/${gainers[0].id}`} className="block">
+              <div className="text-sm font-medium uppercase">{gainers[0].symbol}</div>
+              <div className="text-sm font-medium text-green-500">
+                +{gainers[0].price_change_percentage_24h.toFixed(2)}%
+              </div>
+            </Link>
+          )}
+        </div>
+      </div>
+      <div className="min-w-0">
+        <h3 className="mb-1 text-xs font-semibold text-gray-300">Trending</h3>
+        <div className="w-full min-w-0 -mx-4 px-4 overflow-x-auto">
+          <div className="flex gap-2">
+            {trending.map((c) => (
+              <Link
+                key={c.id}
+                href={`/coin/${c.id}`}
+                className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-gray-600 px-3 py-1 text-sm"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={c.thumb} alt={c.name} className="h-5 w-5 rounded-full" />
+                <span className="uppercase">{c.symbol}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   );
+}
+
+function fgTextColor(v: number) {
+  if (v <= 24) return "text-red-500";
+  if (v <= 44) return "text-orange-500";
+  if (v <= 55) return "text-gray-400";
+  if (v <= 75) return "text-lime-500";
+  return "text-green-500";
 }

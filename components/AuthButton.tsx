@@ -14,7 +14,7 @@ export default async function AuthButton() {
   if (session?.user) {
     return (
       <div className="flex items-center gap-2 min-w-0">
-        <span className="max-w-[10rem] truncate md:max-w-none">
+        <span className="max-w-[6rem] truncate md:max-w-[10rem]">
           {session.user.name ?? session.user.email}
         </span>
         <form
@@ -25,7 +25,7 @@ export default async function AuthButton() {
         >
           <button
             type="submit"
-            className="rounded-lg border border-gray-500 px-4 py-2 min-h-10 md:min-h-0"
+            className="rounded-lg border border-gray-500 px-2 py-1 text-sm min-h-10 md:min-h-0 md:px-4 md:py-2"
           >
             Sign out
           </button>
@@ -37,7 +37,7 @@ export default async function AuthButton() {
   return (
     <details className="relative">
       <summary
-        className="rounded-lg border border-gray-500 px-4 py-2 min-h-10 md:min-h-0 list-none cursor-pointer"
+        className="rounded-lg border border-gray-500 px-3 py-1 text-sm min-h-10 md:min-h-0 md:px-4 md:py-2 list-none cursor-pointer"
       >
         Sign in
       </summary>

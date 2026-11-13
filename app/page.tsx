@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCurrency } from "@/lib/useCurrency";
 import { formatCompactMoney, formatMoney } from "@/lib/currency";
 import MarketOverview from "@/components/MarketOverview";
+import MobileCoinList from "@/components/MobileCoinList";
 
 type Coin = {
   id: string;
@@ -33,6 +34,7 @@ type SortKey =
   | "current_price"
   | "price_change_percentage_24h"
   | "price_change_percentage_7d_in_currency"
+  | "price_change_percentage_30d_in_currency"
   | "market_cap"
   | "total_volume";
 
@@ -415,7 +417,7 @@ export default function Home() {
 
       {!loading && (
       <>
-      <div className="overflow-x-auto w-full min-w-0">
+      <div className="overflow-x-auto w-full min-w-0 hidden md:block">
         <table className="min-w-[760px] md:min-w-0 md:w-full text-left">
           <thead>
             <tr className="border-b border-gray-500">
@@ -551,8 +553,30 @@ export default function Home() {
       </>
       )}
 
+      <MobileCoinList
+        coins={sorted}
+        loading={loading}
+        currency={currency}
+        watchlist={watchlist}
+        toggleWatch={toggleWatch}
+        flash={flash}
+        search={search}
+        setSearch={setSearch}
+        showWatchlist={showWatchlist}
+        setShowWatchlist={setShowWatchlist}
+        sortKey={sortKey}
+        sortDir={sortDir}
+        setSortKey={setSortKey}
+        setSortDir={setSortDir}
+        searchResults={searchResults}
+        searchLoading={searchLoading}
+        searchError={searchError}
+        watchlistCount={watchlist.length}
+        watchlistError={watchlistError}
+      />
+
       {search.length >= 2 && !showWatchlist && (
-        <div className="mb-6">
+        <div className="mb-6 hidden md:block">
           <h2 className="mb-2 text-xl font-semibold">More coins</h2>
           {searchLoading ? (
             <div className="animate-pulse h-4 w-24 rounded bg-gray-700" />
