@@ -222,11 +222,9 @@ export default function CoinDetail({ id }: { id: string }) {
     if (chartData.type === "candles" && chartData.candles.length === 0) return;
 
     let hints: string[] = [];
-    const hasIndicators = showSMA20 || showSMA50 || showRSI || showMACD;
-    const chartHeight = hasIndicators && (showRSI || showMACD) ? 520 : 400;
 
     const chart = createChart(containerRef.current, {
-      height: chartHeight,
+      autoSize: true,
       localization: {
         priceFormatter: (p: number) => formatMoney(p, displayCurrency),
       },
@@ -496,23 +494,23 @@ export default function CoinDetail({ id }: { id: string }) {
   const truncated = plainText.length > 600 ? plainText.slice(0, 600) + "..." : plainText;
 
   return (
-    <main className="mx-auto max-w-4xl p-6">
-      <Link href="/" className="text-sm text-gray-400 hover:underline">
+    <main className="mx-auto max-w-4xl w-full min-w-0 px-4 py-6 pb-24 md:px-6 md:py-6 md:pb-0">
+      <Link href="/" className="inline-flex min-h-11 items-center text-sm text-gray-400 hover:underline">
         ← Back
       </Link>
 
-      <div className="mb-4 flex flex-col md:flex-row md:items-center gap-4">
-        <div className="flex items-center gap-3">
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+        <div className="flex min-w-0 items-center gap-3">
           {details?.image ? (
-            <img src={details.image} alt={details.name ?? id} className="h-12 w-12 rounded" />
+            <img src={details.image} alt={details.name ?? id} className="h-10 w-10 shrink-0 rounded md:h-12 md:w-12" />
           ) : (
-            <div className="h-12 w-12 rounded bg-gray-700 animate-pulse" />
+            <div className="h-10 w-10 shrink-0 rounded bg-gray-700 animate-pulse md:h-12 md:w-12" />
           )}
-          <div>
-            <h1 className="text-3xl font-bold">
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-medium md:text-3xl md:font-bold">
               {details?.name ?? (chartLoading ? <span className="animate-pulse" /> : id)}
             </h1>
-            <p className="text-sm uppercase text-gray-400">
+            <p className="truncate text-xs uppercase text-gray-400 md:text-sm">
               {details?.symbol?.toUpperCase() ?? ""}
               {details?.rank != null && (
                 <span className="ml-2 text-xs text-gray-500">Rank #{details.rank}</span>
@@ -520,9 +518,25 @@ export default function CoinDetail({ id }: { id: string }) {
             </p>
           </div>
         </div>
+        {details?.price != null && (
+          <div className="flex items-baseline gap-2 md:hidden">
+            <span className="text-3xl font-medium tabular-nums">
+              {formatMoney(details.price, displayCurrency)}
+            </span>
+            {details.change24h != null && (
+              <span
+                className={`text-sm font-medium ${
+                  details.change24h >= 0 ? "text-green-500" : "text-red-500"
+                }`}
+              >
+                {details.change24h.toFixed(2)}%
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="mb-4 flex gap-2 flex-wrap">
+      <div className="mb-4 flex gap-2 overflow-x-auto w-full min-w-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {RANGES.map((r) => {
           const isBin = r.key === "1h" || r.key === "all";
           const disabled = isBin && !binanceEnabled;
@@ -534,7 +548,7 @@ export default function CoinDetail({ id }: { id: string }) {
               }}
               disabled={disabled}
               title={disabled ? "Only available for top coins listed on Binance" : undefined}
-              className={`rounded-lg border px-4 py-2 ${
+              className={`shrink-0 whitespace-nowrap min-h-11 rounded-lg border px-4 py-2 md:min-h-0 ${
                 range === r.key
                   ? "border-green-500 bg-green-500 text-black"
                   : "border-gray-500"
@@ -544,10 +558,10 @@ export default function CoinDetail({ id }: { id: string }) {
             </button>
           );
         })}
-        <div className="ml-2 flex gap-1">
+        <div className="ml-2 flex shrink-0 gap-1">
           <button
             onClick={() => setChartType("line")}
-            className={`rounded-lg border px-4 py-2 ${
+            className={`shrink-0 whitespace-nowrap min-h-11 rounded-lg border px-4 py-2 md:min-h-0 ${
               chartType === "line"
                 ? "border-green-500 bg-green-500 text-black"
                 : "border-gray-500"
@@ -557,7 +571,7 @@ export default function CoinDetail({ id }: { id: string }) {
           </button>
           <button
             onClick={() => setChartType("candles")}
-            className={`rounded-lg border px-4 py-2 ${
+            className={`shrink-0 whitespace-nowrap min-h-11 rounded-lg border px-4 py-2 md:min-h-0 ${
               chartType === "candles"
                 ? "border-green-500 bg-green-500 text-black"
                 : "border-gray-500"
@@ -574,10 +588,10 @@ export default function CoinDetail({ id }: { id: string }) {
         </p>
       )}
 
-      <div className="mb-4 flex gap-2 flex-wrap">
+      <div className="mb-4 flex gap-2 overflow-x-auto w-full min-w-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <button
           onClick={() => setShowSMA20((v) => !v)}
-          className={`rounded-lg border px-3 py-1 text-sm ${
+          className={`shrink-0 whitespace-nowrap min-h-11 rounded-lg border px-3 py-1 text-sm md:min-h-0 ${
             showSMA20 ? "border-yellow-500 bg-yellow-500 text-black" : "border-gray-500"
           }`}
         >
@@ -585,7 +599,7 @@ export default function CoinDetail({ id }: { id: string }) {
         </button>
         <button
           onClick={() => setShowSMA50((v) => !v)}
-          className={`rounded-lg border px-3 py-1 text-sm ${
+          className={`shrink-0 whitespace-nowrap min-h-11 rounded-lg border px-3 py-1 text-sm md:min-h-0 ${
             showSMA50 ? "border-blue-500 bg-blue-500 text-black" : "border-gray-500"
           }`}
         >
@@ -593,7 +607,7 @@ export default function CoinDetail({ id }: { id: string }) {
         </button>
         <button
           onClick={() => setShowRSI((v) => !v)}
-          className={`rounded-lg border px-3 py-1 text-sm ${
+          className={`shrink-0 whitespace-nowrap min-h-11 rounded-lg border px-3 py-1 text-sm md:min-h-0 ${
             showRSI ? "border-purple-500 bg-purple-500 text-black" : "border-gray-500"
           }`}
         >
@@ -601,7 +615,7 @@ export default function CoinDetail({ id }: { id: string }) {
         </button>
         <button
           onClick={() => setShowMACD((v) => !v)}
-          className={`rounded-lg border px-3 py-1 text-sm ${
+          className={`shrink-0 whitespace-nowrap min-h-11 rounded-lg border px-3 py-1 text-sm md:min-h-0 ${
             showMACD ? "border-cyan-500 bg-cyan-500 text-black" : "border-gray-500"
           }`}
         >
@@ -612,21 +626,21 @@ export default function CoinDetail({ id }: { id: string }) {
       {indicatorHint && <p className="mb-2 text-sm text-gray-400">{indicatorHint}</p>}
 
       {chartLoading ? (
-        <div className="h-[400px] w-full animate-pulse rounded bg-gray-700" />
+        <div className={`w-full animate-pulse rounded bg-gray-700 ${showRSI || showMACD ? "h-[480px] md:h-[520px]" : "h-[300px] md:h-[400px]"}`} />
       ) : chartError ? (
-        <div className="h-[400px] w-full rounded bg-gray-800 flex flex-col items-center justify-center gap-4">
+        <div className={`w-full rounded bg-gray-800 flex flex-col items-center justify-center gap-4 ${showRSI || showMACD ? "h-[480px] md:h-[520px]" : "h-[300px] md:h-[400px]"}`}>
           <p className="text-red-500">{chartError}</p>
           <div className="flex gap-2">
             <button
               onClick={() => setRetry((r) => r + 1)}
-              className="rounded-lg border border-gray-500 px-4 py-2"
+              className="min-h-11 rounded-lg border border-gray-500 px-4 py-2 md:min-h-0"
             >
               Try again
             </button>
             {isBinanceRange && (
               <button
                 onClick={() => setRange("7d")}
-                className="rounded-lg border border-gray-500 px-4 py-2 text-sm"
+                className="min-h-11 rounded-lg border border-gray-500 px-4 py-2 text-sm md:min-h-0"
               >
                 Switch to 7D
               </button>
@@ -634,17 +648,17 @@ export default function CoinDetail({ id }: { id: string }) {
           </div>
         </div>
       ) : (
-        <div ref={containerRef} className="w-full" />
+        <div ref={containerRef} className={`w-full min-w-0 ${showRSI || showMACD ? "h-[480px] md:h-[520px]" : "h-[300px] md:h-[400px]"}`} />
       )}
 
       {!detailsError && details ? (
-        <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
           {STATS.map((s) => {
             const val = statValue(s.key);
             return (
-              <div key={s.key} className="p-3 rounded bg-gray-800 border border-gray-700">
+              <div key={s.key} className="p-3 rounded bg-gray-800 border border-gray-700 md:p-3">
                 <p className="text-xs text-gray-400">{s.label}</p>
-                <p className={`text-sm font-medium ${statColor(s.key)}`}>{val}</p>
+                <p className={`truncate text-sm font-medium ${statColor(s.key)}`}>{val}</p>
               </div>
             );
           })}
@@ -654,13 +668,13 @@ export default function CoinDetail({ id }: { id: string }) {
       {!detailsError && details ? (
         <div className="mt-6">
           <h2 className="mb-2 text-xl font-semibold">About</h2>
-          <p className="mb-2 text-gray-300 max-w-2xl">
+          <p className="mb-2 max-w-2xl text-sm leading-relaxed text-gray-300 md:text-base">
             {expanded ? plainText : truncated}
           </p>
           {plainText.length > 600 && (
             <button
               onClick={() => setExpanded((e) => !e)}
-              className="text-sm text-blue-500 underline"
+              className="min-h-11 text-sm text-blue-500 underline md:min-h-0"
             >
               {expanded ? "Show less" : "Read more"}
             </button>
@@ -670,7 +684,7 @@ export default function CoinDetail({ id }: { id: string }) {
               href={details.homepage}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 inline-block text-sm text-blue-500 underline"
+              className="mt-2 inline-flex min-h-11 items-center text-sm text-blue-500 underline md:min-h-0"
             >
               Website
             </a>
