@@ -145,10 +145,10 @@ export default function AlertsView() {
     return (
       <main className="mx-auto max-w-4xl w-full min-w-0 px-4 py-6 pb-24 md:px-6 md:py-6 md:pb-0">
         <h1 className="mb-4 text-xl font-medium md:text-3xl md:font-bold">Price alerts</h1>
-        <p className="mb-4 text-gray-300">Please sign in to use price alerts.</p>
+        <p className="mb-4 text-[var(--foreground)]">Please sign in to use price alerts.</p>
         <Link
           href="/api/auth/signin"
-          className="inline-flex min-h-11 items-center rounded-lg border border-gray-500 px-4 py-2 text-blue-500"
+          className="inline-flex min-h-11 items-center rounded-lg border border-[var(--input-border)] px-4 py-2 text-blue-500"
         >
           Sign in
         </Link>
@@ -162,7 +162,7 @@ export default function AlertsView() {
   return (
     <main className="mx-auto max-w-4xl w-full min-w-0 px-4 py-6 pb-24 md:px-6 md:py-6 md:pb-0">
       <h1 className="mb-2 text-xl font-medium md:mb-4 md:text-3xl md:font-bold">Price alerts</h1>
-      <p className="mb-4 text-xs text-gray-400 md:text-sm">
+      <p className="mb-4 text-xs text-[var(--muted)] md:text-sm">
         Alerts are checked every minute while this site is open in a browser tab. All prices are in USD.
       </p>
 
@@ -170,7 +170,7 @@ export default function AlertsView() {
         {notif === "default" && (
           <button
             onClick={requestNotif}
-            className="min-h-11 w-full rounded-lg border border-gray-500 px-4 py-2 text-sm md:min-h-0 md:w-auto"
+            className="min-h-11 w-full rounded-lg border border-[var(--input-border)] px-4 py-2 text-sm md:min-h-0 md:w-auto"
           >
             Enable browser notifications
           </button>
@@ -178,54 +178,54 @@ export default function AlertsView() {
         <button
           onClick={onCheckNow}
           disabled={checking}
-          className="min-h-11 w-full rounded-lg border border-gray-500 px-4 py-2 text-sm disabled:opacity-50 md:min-h-0 md:w-auto"
+          className="min-h-11 w-full rounded-lg border border-[var(--input-border)] px-4 py-2 text-sm disabled:opacity-50 md:min-h-0 md:w-auto"
         >
           {checking ? "Checking..." : "Check now"}
         </button>
       </div>
       {notif === "denied" && (
-        <p className="mb-2 break-words text-sm text-gray-400">
+        <p className="mb-2 break-words text-sm text-[var(--muted)]">
           Notifications are blocked in your browser settings.
         </p>
       )}
-      {checkMsg && <p className="mb-2 break-words text-sm text-gray-400">{checkMsg}</p>}
-      {checkErr && <p className="mb-2 break-words text-sm text-red-500">{checkErr}</p>}
+      {checkMsg && <p className="mb-2 break-words text-sm text-[var(--muted)]">{checkMsg}</p>}
+      {checkErr && <p className="mb-2 break-words text-sm text-red-700 dark:text-red-500">{checkErr}</p>}
 
       <form
         onSubmit={onSubmit}
-        className="mb-4 space-y-3 rounded-xl border border-gray-700 bg-gray-800 p-3 md:rounded-lg md:p-4"
+        className="mb-4 space-y-3 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] p-3 md:rounded-lg md:p-4"
       >
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div>
-            <label className="mb-1 block text-sm text-gray-400">Coin</label>
+            <label className="mb-1 block text-sm text-[var(--muted)]">Coin</label>
             <select
               value={coinId}
               onChange={(e) => setCoinId(e.target.value)}
-              className="min-h-11 w-full rounded-lg border border-gray-500 bg-transparent px-3 py-2 text-base md:min-h-0 md:text-sm"
+              className="min-h-11 w-full rounded-lg border border-[var(--input-border)] bg-transparent px-3 py-2 text-base md:min-h-0 md:text-sm"
             >
               {coins.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
             {selected && (
-              <p className="mt-1 text-xs text-gray-400">
+              <p className="mt-1 text-xs text-[var(--muted)]">
                 Current: {formatMoney(selected.current_price, "usd")}
               </p>
             )}
           </div>
           <div>
-            <label className="mb-1 block text-sm text-gray-400">Direction</label>
+            <label className="mb-1 block text-sm text-[var(--muted)]">Direction</label>
             <select
               value={direction}
               onChange={(e) => setDirection(e.target.value as "above" | "below")}
-              className="min-h-11 w-full rounded-lg border border-gray-500 bg-transparent px-3 py-2 text-base md:min-h-0 md:text-sm"
+              className="min-h-11 w-full rounded-lg border border-[var(--input-border)] bg-transparent px-3 py-2 text-base md:min-h-0 md:text-sm"
             >
               <option value="above">Goes above</option>
               <option value="below">Drops below</option>
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm text-gray-400">Target price (USD)</label>
+            <label className="mb-1 block text-sm text-[var(--muted)]">Target price (USD)</label>
             <input
               type="number"
               inputMode="decimal"
@@ -233,11 +233,11 @@ export default function AlertsView() {
               min="0"
               value={targetPrice}
               onChange={(e) => setTargetPrice(e.target.value)}
-              className="min-h-11 w-full rounded-lg border border-gray-500 bg-transparent px-3 py-2 text-base md:min-h-0 md:text-sm"
+              className="min-h-11 w-full rounded-lg border border-[var(--input-border)] bg-transparent px-3 py-2 text-base md:min-h-0 md:text-sm"
             />
           </div>
         </div>
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p className="text-sm text-red-700 dark:text-red-500">{error}</p>}
         <button
           type="submit"
           disabled={submitting}
@@ -250,21 +250,21 @@ export default function AlertsView() {
       {loading ? (
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded bg-gray-700" />
+            <div key={i} className="h-16 animate-pulse rounded bg-[var(--skeleton)]" />
           ))}
         </div>
       ) : (
         <>
           <h2 className="mb-2 text-lg font-semibold md:text-xl">Active alerts</h2>
           {active.length === 0 ? (
-            <p className="mb-6 text-sm text-gray-400">No active alerts.</p>
+            <p className="mb-6 text-sm text-[var(--muted)]">No active alerts.</p>
           ) : (
             <>
               <ul className="mb-6 space-y-2 md:hidden">
                 {active.map((a) => (
                   <li
                     key={a.id}
-                    className={`flex items-center justify-between gap-3 rounded-xl border border-gray-700 bg-gray-800 p-3 border-l-4 ${
+                    className={`flex items-center justify-between gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] p-3 border-l-4 ${
                       a.direction === "above" ? "border-l-green-500" : "border-l-red-500"
                     }`}
                   >
@@ -276,7 +276,7 @@ export default function AlertsView() {
                       />
                       <div className="min-w-0">
                         <div className="truncate font-medium">{a.coinName}</div>
-                        <div className="text-sm text-gray-300">
+                        <div className="text-sm text-[var(--foreground)]">
                           {a.direction === "above" ? "Goes above" : "Drops below"}{" "}
                           {formatMoney(a.targetPrice, "usd")}
                         </div>
@@ -284,7 +284,7 @@ export default function AlertsView() {
                     </div>
                     <button
                       onClick={() => onDelete(a.id)}
-                      className="min-h-11 min-w-[44px] shrink-0 rounded border border-gray-500 px-3 py-1 text-sm"
+                      className="min-h-11 min-w-[44px] shrink-0 rounded border border-[var(--input-border)] px-3 py-1 text-sm"
                     >
                       Delete
                     </button>
@@ -293,13 +293,13 @@ export default function AlertsView() {
               </ul>
               <ul className="mb-6 hidden space-y-2 md:block">
                 {active.map((a) => (
-                  <li key={a.id} className="flex items-center justify-between rounded border border-gray-700 bg-gray-800 p-3">
+                  <li key={a.id} className="flex items-center justify-between rounded border border-[var(--card-border)] bg-[var(--card-bg)] p-3">
                     <span>
                       {a.coinName} {a.direction} {formatMoney(a.targetPrice, "usd")}
                     </span>
                     <button
                       onClick={() => onDelete(a.id)}
-                      className="rounded border border-gray-500 px-2 py-1 text-sm"
+                      className="rounded border border-[var(--input-border)] px-2 py-1 text-sm"
                     >
                       Delete
                     </button>
@@ -311,14 +311,14 @@ export default function AlertsView() {
 
           <h2 className="mb-2 text-lg font-semibold md:text-xl">Triggered alerts</h2>
           {triggered.length === 0 ? (
-            <p className="text-sm text-gray-400">No triggered alerts.</p>
+            <p className="text-sm text-[var(--muted)]">No triggered alerts.</p>
           ) : (
             <>
               <ul className="space-y-2 md:hidden">
                 {triggered.map((a) => (
                   <li
                     key={a.id}
-                    className={`flex items-center justify-between gap-3 rounded-xl border border-gray-700 bg-gray-800 p-3 border-l-4 ${
+                    className={`flex items-center justify-between gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] p-3 border-l-4 ${
                       a.direction === "above" ? "border-l-green-500" : "border-l-red-500"
                     }`}
                   >
@@ -330,12 +330,12 @@ export default function AlertsView() {
                       />
                       <div className="min-w-0">
                         <div className="truncate font-medium">{a.coinName}</div>
-                        <div className="text-sm text-gray-300">
+                        <div className="text-sm text-[var(--foreground)]">
                           {a.direction === "above" ? "Goes above" : "Drops below"}{" "}
                           {formatMoney(a.targetPrice, "usd")}
                         </div>
                         {a.triggeredAt && (
-                          <div className="text-xs text-gray-400">
+                          <div className="text-xs text-[var(--muted)]">
                             {new Date(a.triggeredAt).toLocaleString()}
                           </div>
                         )}
@@ -343,7 +343,7 @@ export default function AlertsView() {
                     </div>
                     <button
                       onClick={() => onDelete(a.id)}
-                      className="min-h-11 min-w-[44px] shrink-0 rounded border border-gray-500 px-3 py-1 text-sm"
+                      className="min-h-11 min-w-[44px] shrink-0 rounded border border-[var(--input-border)] px-3 py-1 text-sm"
                     >
                       Delete
                     </button>
@@ -352,18 +352,18 @@ export default function AlertsView() {
               </ul>
               <ul className="hidden space-y-2 md:block">
                 {triggered.map((a) => (
-                  <li key={a.id} className="flex items-center justify-between rounded border border-gray-700 bg-gray-800 p-3">
+                  <li key={a.id} className="flex items-center justify-between rounded border border-[var(--card-border)] bg-[var(--card-bg)] p-3">
                     <span>
                       {a.coinName} {a.direction} {formatMoney(a.targetPrice, "usd")}
                       {a.triggeredAt && (
-                        <span className="ml-2 text-xs text-gray-400">
+                        <span className="ml-2 text-xs text-[var(--muted)]">
                           {new Date(a.triggeredAt).toLocaleString()}
                         </span>
                       )}
                     </span>
                     <button
                       onClick={() => onDelete(a.id)}
-                      className="rounded border border-gray-500 px-2 py-1 text-sm"
+                      className="rounded border border-[var(--input-border)] px-2 py-1 text-sm"
                     >
                       Delete
                     </button>

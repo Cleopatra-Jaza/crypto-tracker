@@ -60,7 +60,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="min-h-full flex flex-col">
-      <header className="relative flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-gray-200 px-4 py-3 md:flex-nowrap md:items-center md:justify-between md:py-2">
+      <header className="relative flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-[var(--card-border)] px-4 py-3 md:flex-nowrap md:items-center md:justify-between md:py-2">
         <div className="flex min-w-0 items-center gap-2 md:gap-4">
           <Link href="/" className="truncate text-base font-medium md:font-normal">
             Crypto Tracker

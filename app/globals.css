@@ -3,13 +3,29 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+  --muted: #4b5563;
+  --hover-bg: #f3f4f6;
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+  --skeleton: #e5e7eb;
 }
 
 .dark {
+  color-scheme: dark;
   --background: #0a0a0a;
   --foreground: #ededed;
+  --card-bg: #1f2937;
+  --card-border: #374151;
+  --muted: #9ca3af;
+  --hover-bg: #374151;
+  --input-bg: transparent;
+  --input-border: #6b7280;
+  --skeleton: #374151;
 }
 
 @theme inline {
@@ -30,4 +46,9 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 2px;
 }

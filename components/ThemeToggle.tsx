@@ -29,7 +29,7 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      className="rounded-lg border border-gray-500 px-3 py-2"
+      className="rounded-lg border border-[var(--input-border)] px-3 py-2"
       aria-label="Toggle theme"
     >
       {dark ? "☀️" : "🌙"}

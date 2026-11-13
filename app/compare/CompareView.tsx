@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useCurrency } from "@/lib/useCurrency";
+import useIsDark from "@/lib/useTheme";
 import { formatMoney, formatCompactMoney } from "@/lib/currency";
 import {
   createChart,
@@ -76,6 +77,7 @@ async function fetchJson(url: string, coinName: string, label: string, signal: A
 
 export default function CompareView() {
   const [currency] = useCurrency();
+  const isDark = useIsDark();
   const [coins, setCoins] = useState<Coin[]>([]);
   const [coinA, setCoinA] = useState("bitcoin");
   const [coinB, setCoinB] = useState("ethereum");
@@ -183,16 +185,23 @@ export default function CompareView() {
       autoSize: true,
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
-        textColor: "#9ca3af",
+        textColor: isDark ? "#9ca3af" : "#374151",
       },
       grid: {
-        vertLines: { color: "#374151" },
-        horzLines: { color: "#374151" },
+        vertLines: { color: isDark ? "#374151" : "#e5e7eb" },
+        horzLines: { color: isDark ? "#374151" : "#e5e7eb" },
+      },
+      crosshair: {
+        vertLine: { color: isDark ? "#6b7280" : "#9ca3af" },
+        horzLine: { color: isDark ? "#6b7280" : "#9ca3af" },
+      },
+      rightPriceScale: {
+        borderColor: isDark ? "#374151" : "#d1d5db",
       },
       localization: {
         priceFormatter: (p: number) => `${p >= 0 ? "+" : ""}${p.toFixed(2)}%`,
       },
-      timeScale: { timeVisible: days <= 7 },
+      timeScale: { timeVisible: days <= 7, borderColor: isDark ? "#374151" : "#d1d5db" },
     });
     const seriesA = toPercentSeries(pricesA);
     const seriesB = toPercentSeries(pricesB);
@@ -203,7 +212,7 @@ export default function CompareView() {
     sB.setData(seriesB);
     chart.timeScale().fitContent();
     return () => chart.remove();
-  }, [pricesA, pricesB, days, currency, coinA, coinB]);
+  }, [pricesA, pricesB, days, currency, coinA, coinB, isDark]);
 
   const sameCoin = coinA === coinB;
   const hasChartData = pricesA.length >= 2 && pricesB.length >= 2 && !sameCoin && !error && !loading;
@@ -226,14 +235,14 @@ export default function CompareView() {
 
       <div className="mb-4 grid grid-cols-1 gap-3 md:flex md:flex-wrap md:gap-4">
         <label className="flex min-w-0 flex-col gap-1">
-          <span className="flex items-center gap-2 text-xs text-gray-400">
+          <span className="flex items-center gap-2 text-xs text-[var(--muted)]">
             <span className="inline-block h-2.5 w-2.5 rounded-full bg-green-500" />
             Coin A
           </span>
           <select
             value={coinA}
             onChange={(e) => setCoinA(e.target.value)}
-            className="min-h-11 w-full rounded-lg border border-gray-500 bg-transparent px-3 py-2 md:min-h-0 md:w-auto"
+            className="min-h-11 w-full rounded-lg border border-[var(--input-border)] bg-transparent px-3 py-2 md:min-h-0 md:w-auto"
           >
             {coins.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
@@ -241,14 +250,14 @@ export default function CompareView() {
           </select>
         </label>
         <label className="flex min-w-0 flex-col gap-1">
-          <span className="flex items-center gap-2 text-xs text-gray-400">
+          <span className="flex items-center gap-2 text-xs text-[var(--muted)]">
             <span className="inline-block h-2.5 w-2.5 rounded-full bg-blue-500" />
             Coin B
           </span>
           <select
             value={coinB}
             onChange={(e) => setCoinB(e.target.value)}
-            className="min-h-11 w-full rounded-lg border border-gray-500 bg-transparent px-3 py-2 md:min-h-0 md:w-auto"
+            className="min-h-11 w-full rounded-lg border border-[var(--input-border)] bg-transparent px-3 py-2 md:min-h-0 md:w-auto"
           >
             {coins.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
@@ -257,7 +266,7 @@ export default function CompareView() {
         </label>
       </div>
 
-      {sameCoin && <p className="mb-4 text-sm text-gray-400">Pick two different coins</p>}
+      {sameCoin && <p className="mb-4 text-sm text-[var(--muted)]">Pick two different coins</p>}
 
       <div className="mb-4 flex w-full min-w-0 gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {RANGES.map((r) => (
@@ -265,7 +274,7 @@ export default function CompareView() {
             key={r.label}
             onClick={() => setDays(r.days)}
             className={`shrink-0 whitespace-nowrap min-h-11 rounded-lg border px-4 py-2 md:min-h-0 ${
-              days === r.days ? "border-green-500 bg-green-500 text-black" : "border-gray-500"
+              days === r.days ? "border-green-500 bg-green-500 text-black" : "border-[var(--input-border)]"
             }`}
           >
             {r.label}
@@ -289,14 +298,14 @@ export default function CompareView() {
       <div className="relative h-[300px] w-full min-w-0 md:h-[400px]">
         <div ref={chartRef} className="h-full w-full" />
         {loading && !sameCoin && (
-          <div className="absolute inset-0 animate-pulse rounded bg-gray-700" />
+          <div className="absolute inset-0 animate-pulse rounded bg-[var(--skeleton)]" />
         )}
         {error && !loading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded bg-gray-800/90">
-            <p className="text-red-500">{error}</p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded bg-[var(--card-bg)]/90">
+            <p className="text-red-700 dark:text-red-500">{error}</p>
             <button
               onClick={() => setRetry((r) => r + 1)}
-              className="min-h-11 rounded-lg border border-gray-500 px-4 py-2 md:min-h-0"
+              className="min-h-11 rounded-lg border border-[var(--input-border)] px-4 py-2 md:min-h-0"
             >
               Try again
             </button>
@@ -309,7 +318,7 @@ export default function CompareView() {
           <div className="mt-6 hidden overflow-x-auto md:block">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-gray-500">
+                <tr className="border-b border-[var(--card-border)]">
                   <th className="p-3">Metric</th>
                   <th className="p-3 text-right">{nameA}</th>
                   <th className="p-3 text-right">{nameB}</th>
@@ -322,11 +331,11 @@ export default function CompareView() {
                   const isPct = row.type === "percent";
                   const color = (v: unknown) =>
                     isPct && typeof v === "number" && Number.isFinite(v)
-                      ? v >= 0 ? "text-green-500" : "text-red-500"
+                      ? v >= 0 ? "text-green-700 dark:text-green-500" : "text-red-700 dark:text-red-500"
                       : "";
                   return (
-                    <tr key={row.key} className="border-b border-gray-700">
-                      <td className="p-3 text-gray-400">{row.label}</td>
+                    <tr key={row.key} className="border-b border-[var(--card-border)]">
+                      <td className="p-3 text-[var(--muted)]">{row.label}</td>
                       <td className={`p-3 text-right ${color(vA)}`}>{fmt(vA, currency, row.type)}</td>
                       <td className={`p-3 text-right ${color(vB)}`}>{fmt(vB, currency, row.type)}</td>
                     </tr>
@@ -342,14 +351,14 @@ export default function CompareView() {
               const isPct = row.type === "percent";
               const color = (v: unknown) =>
                 isPct && typeof v === "number" && Number.isFinite(v)
-                  ? v >= 0 ? "text-green-500" : "text-red-500"
+                  ? v >= 0 ? "text-green-700 dark:text-green-500" : "text-red-700 dark:text-red-500"
                   : "";
               return (
-                <div key={row.key} className="rounded border border-gray-700 bg-gray-800 p-3">
-                  <div className="mb-2 text-xs text-gray-400">{row.label}</div>
+                <div key={row.key} className="rounded border border-[var(--card-border)] bg-[var(--card-bg)] p-3">
+                  <div className="mb-2 text-xs text-[var(--muted)]">{row.label}</div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="min-w-0">
-                      <div className="mb-1 flex items-center gap-1 text-xs text-gray-400">
+                      <div className="mb-1 flex items-center gap-1 text-xs text-[var(--muted)]">
                         <span className="inline-block h-2 w-2 rounded-full bg-green-500" />
                         <span className="uppercase">{symbolA}</span>
                       </div>
@@ -358,7 +367,7 @@ export default function CompareView() {
                       </div>
                     </div>
                     <div className="min-w-0">
-                      <div className="mb-1 flex items-center gap-1 text-xs text-gray-400">
+                      <div className="mb-1 flex items-center gap-1 text-xs text-[var(--muted)]">
                         <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
                         <span className="uppercase">{symbolB}</span>
                       </div>

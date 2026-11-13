@@ -92,7 +92,6 @@ export default function PortfolioPage() {
       cancelled = true;
       clearInterval(timer);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleAdd(e: React.FormEvent) {
@@ -169,10 +168,10 @@ export default function PortfolioPage() {
     return (
       <main className="mx-auto max-w-4xl w-full min-w-0 px-4 py-6 pb-24 md:px-6 md:py-6 md:pb-0">
         <h1 className="mb-4 text-xl font-medium md:text-3xl md:font-bold">Portfolio</h1>
-        <p className="mb-4 text-gray-400">Please sign in to see your portfolio.</p>
+        <p className="mb-4 text-[var(--muted)]">Please sign in to see your portfolio.</p>
         <Link
           href="/api/auth/signin"
-          className="inline-flex min-h-11 items-center rounded-lg border border-gray-500 px-4 py-2 text-blue-500"
+          className="inline-flex min-h-11 items-center rounded-lg border border-[var(--input-border)] px-4 py-2 text-blue-500"
         >
           Sign in
         </Link>
@@ -338,12 +337,14 @@ export default function PortfolioPage() {
     URL.revokeObjectURL(url);
   }
 
-  let donutOffset = 0;
-  const donutSegments = donutAlloc.map((d) => {
-    const seg = { ...d, offset: donutOffset };
-    donutOffset += d.percent;
-    return seg;
-  });
+  const donutSegments = donutAlloc.reduce<{ name: string; percent: number; color: string; offset: number }[]>(
+    (acc, d) => {
+      const offset = acc.length === 0 ? 0 : acc[acc.length - 1].offset + acc[acc.length - 1].percent;
+      acc.push({ ...d, offset });
+      return acc;
+    },
+    []
+  );
   const donutLabel = `Portfolio allocation: ${donutAlloc
     .map((d) => `${d.name} ${d.percent.toFixed(1)}%`)
     .join(", ")}`;
@@ -353,20 +354,20 @@ export default function PortfolioPage() {
       <h1 className="mb-4 text-xl font-medium md:text-3xl md:font-bold">Portfolio</h1>
 
       {loading && <p>Loading...</p>}
-      {error && <p className="text-red-500">Error: {error}</p>}
+      {error && <p className="text-red-700 dark:text-red-500">Error: {error}</p>}
 
       <div className="mb-4 grid grid-cols-2 gap-2 md:hidden">
-        <div className="min-w-0 rounded border border-gray-700 bg-gray-800 p-3">
-          <div className="text-xs text-gray-400">Total value</div>
+        <div className="min-w-0 rounded border border-[var(--card-border)] bg-[var(--card-bg)] p-3">
+          <div className="text-xs text-[var(--muted)]">Total value</div>
           <div className="break-words text-lg font-medium tabular-nums">
             ${money(totalValue)}
           </div>
         </div>
-        <div className="min-w-0 rounded border border-gray-700 bg-gray-800 p-3">
-          <div className="text-xs text-gray-400">Total profit/loss</div>
+        <div className="min-w-0 rounded border border-[var(--card-border)] bg-[var(--card-bg)] p-3">
+          <div className="text-xs text-[var(--muted)]">Total profit/loss</div>
           <div
             className={`break-words text-lg font-medium tabular-nums ${
-              totalProfit >= 0 ? "text-green-500" : "text-red-500"
+              totalProfit >= 0 ? "text-green-700 dark:text-green-500" : "text-red-700 dark:text-red-500"
             }`}
           >
             ${money(totalProfit)}
@@ -374,7 +375,7 @@ export default function PortfolioPage() {
           {totalProfitPercent != null && (
             <div
               className={`text-xs ${
-                totalProfit >= 0 ? "text-green-500" : "text-red-500"
+                totalProfit >= 0 ? "text-green-700 dark:text-green-500" : "text-red-700 dark:text-red-500"
               }`}
             >
               {totalProfitPercent >= 0 ? "+" : ""}
@@ -387,7 +388,7 @@ export default function PortfolioPage() {
       <button
         onClick={exportCSV}
         disabled={holdings.length === 0}
-        className="mb-4 min-h-11 w-full rounded-lg border border-gray-500 px-4 py-2 md:hidden disabled:opacity-50"
+        className="mb-4 min-h-11 w-full rounded-lg border border-[var(--input-border)] px-4 py-2 md:hidden disabled:opacity-50"
       >
         Export CSV
       </button>
@@ -397,14 +398,14 @@ export default function PortfolioPage() {
           <span className="font-semibold">Total value: </span>
           ${money(totalValue)}
         </p>
-        <p className={totalProfit >= 0 ? "text-green-500" : "text-red-500"}>
+        <p className={totalProfit >= 0 ? "text-green-700 dark:text-green-500" : "text-red-700 dark:text-red-500"}>
           <span className="font-semibold text-inherit">Total profit/loss: </span>
           ${money(totalProfit)}
         </p>
         <button
           onClick={exportCSV}
           disabled={holdings.length === 0}
-          className="rounded-lg border border-gray-500 px-4 py-2 disabled:opacity-50"
+          className="rounded-lg border border-[var(--input-border)] px-4 py-2 disabled:opacity-50"
         >
           Export CSV
         </button>
@@ -417,7 +418,7 @@ export default function PortfolioPage() {
         <select
           value={coinId}
           onChange={(e) => setCoinId(e.target.value)}
-          className="min-h-11 w-full rounded-lg border border-gray-400 bg-transparent p-2 text-base md:min-h-0 md:w-auto md:text-sm"
+          className="min-h-11 w-full rounded-lg border border-[var(--input-border)] bg-transparent p-2 text-base md:min-h-0 md:w-auto md:text-sm"
           required
         >
           <option value="">Select coin</option>
@@ -433,7 +434,7 @@ export default function PortfolioPage() {
           placeholder="Amount"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="min-h-11 w-full rounded-lg border border-gray-400 bg-transparent p-2 text-base md:min-h-0 md:w-auto md:text-sm"
+          className="min-h-11 w-full rounded-lg border border-[var(--input-border)] bg-transparent p-2 text-base md:min-h-0 md:w-auto md:text-sm"
           required
         />
         <input
@@ -442,21 +443,21 @@ export default function PortfolioPage() {
           placeholder="Buy price (USD)"
           value={buyPrice}
           onChange={(e) => setBuyPrice(e.target.value)}
-          className="min-h-11 w-full rounded-lg border border-gray-400 bg-transparent p-2 text-base md:min-h-0 md:w-auto md:text-sm"
+          className="min-h-11 w-full rounded-lg border border-[var(--input-border)] bg-transparent p-2 text-base md:min-h-0 md:w-auto md:text-sm"
           required
         />
         <button
           type="submit"
           disabled={submitting}
-          className="min-h-11 w-full rounded-lg border border-gray-500 px-4 py-2 md:min-h-0 md:w-auto"
+          className="min-h-11 w-full rounded-lg border border-[var(--input-border)] px-4 py-2 md:min-h-0 md:w-auto"
         >
           Add
         </button>
       </form>
-      {formError && <p className="mb-4 text-red-500">{formError}</p>}
+      {formError && <p className="mb-4 text-red-700 dark:text-red-500">{formError}</p>}
 
       {!loading && holdings.length === 0 && !unauthorized && (
-        <p className="mb-4 text-gray-400">
+        <p className="mb-4 text-[var(--muted)]">
           No holdings yet. Add your first coin using the form above ↑
         </p>
       )}
@@ -464,7 +465,7 @@ export default function PortfolioPage() {
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-gray-500">
+            <tr className="border-b border-[var(--card-border)]">
               <th className="p-3">Coin</th>
               <th className="p-3 text-right">Amount</th>
               <th className="p-3 text-right">Buy price</th>
@@ -481,7 +482,7 @@ export default function PortfolioPage() {
               const editing = editingId === h.id;
               if (!r.available) {
                 return (
-                  <tr key={h.id} className="border-b border-gray-700">
+                  <tr key={h.id} className="border-b border-[var(--card-border)]">
                     <td className="p-3">{h.coinId}</td>
                     <td className="p-3 text-right">
                       {editing ? (
@@ -491,7 +492,7 @@ export default function PortfolioPage() {
                           min={0}
                           value={editAmount}
                           onChange={(e) => setEditAmount(e.target.value)}
-                          className="w-24 rounded border border-gray-500 bg-transparent p-1 text-right"
+                          className="w-24 rounded border border-[var(--input-border)] bg-transparent p-1 text-right"
                         />
                       ) : (
                         money(h.amount)
@@ -505,13 +506,13 @@ export default function PortfolioPage() {
                           min={0}
                           value={editBuyPrice}
                           onChange={(e) => setEditBuyPrice(e.target.value)}
-                          className="w-24 rounded border border-gray-500 bg-transparent p-1 text-right"
+                          className="w-24 rounded border border-[var(--input-border)] bg-transparent p-1 text-right"
                         />
                       ) : (
                         `$${money(h.buyPrice)}`
                       )}
                     </td>
-                    <td className="p-3 text-right text-gray-400">
+                    <td className="p-3 text-right text-[var(--muted)]">
                       price unavailable
                     </td>
                     <td className="p-3 text-right">—</td>
@@ -524,14 +525,14 @@ export default function PortfolioPage() {
                             <button
                               onClick={() => handleSave(h.id)}
                               disabled={actionBusy}
-                              className="rounded-lg border border-gray-500 px-2 py-1"
+                              className="rounded-lg border border-[var(--input-border)] px-2 py-1"
                             >
                               Save
                             </button>
                             <button
                               onClick={() => setEditingId(null)}
                               disabled={actionBusy}
-                              className="rounded-lg border border-gray-500 px-2 py-1"
+                              className="rounded-lg border border-[var(--input-border)] px-2 py-1"
                             >
                               Cancel
                             </button>
@@ -545,14 +546,14 @@ export default function PortfolioPage() {
                                 setEditBuyPrice(String(h.buyPrice));
                               }}
                               disabled={actionBusy || editingId !== null}
-                              className="rounded-lg border border-gray-500 px-2 py-1"
+                              className="rounded-lg border border-[var(--input-border)] px-2 py-1"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => handleDelete(h.id)}
                               disabled={actionBusy}
-                              className="rounded-lg border border-gray-500 px-2 py-1"
+                              className="rounded-lg border border-[var(--input-border)] px-2 py-1"
                             >
                               Delete
                             </button>
@@ -571,7 +572,7 @@ export default function PortfolioPage() {
                 profitPercent: number;
               };
               return (
-                <tr key={h.id} className="border-b border-gray-700">
+                <tr key={h.id} className="border-b border-[var(--card-border)]">
                   <td className="p-3">
                     <div className="flex items-center gap-3">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -581,7 +582,7 @@ export default function PortfolioPage() {
                         className="h-6 w-6"
                       />
                       <span className="font-medium">{rr.coin.name}</span>
-                      <span className="text-sm uppercase text-gray-400">
+                      <span className="text-sm uppercase text-[var(--muted)]">
                         {rr.coin.symbol}
                       </span>
                     </div>
@@ -594,7 +595,7 @@ export default function PortfolioPage() {
                         min={0}
                         value={editAmount}
                         onChange={(e) => setEditAmount(e.target.value)}
-                        className="w-24 rounded border border-gray-500 bg-transparent p-1 text-right"
+                        className="w-24 rounded border border-[var(--input-border)] bg-transparent p-1 text-right"
                       />
                     ) : (
                       money(h.amount)
@@ -608,7 +609,7 @@ export default function PortfolioPage() {
                         min={0}
                         value={editBuyPrice}
                         onChange={(e) => setEditBuyPrice(e.target.value)}
-                        className="w-24 rounded border border-gray-500 bg-transparent p-1 text-right"
+                        className="w-24 rounded border border-[var(--input-border)] bg-transparent p-1 text-right"
                       />
                     ) : (
                       `$${money(h.buyPrice)}`
@@ -618,14 +619,14 @@ export default function PortfolioPage() {
                   <td className="p-3 text-right">${money(rr.currentValue)}</td>
                   <td
                     className={`p-3 text-right ${
-                      rr.profit >= 0 ? "text-green-500" : "text-red-500"
+                      rr.profit >= 0 ? "text-green-700 dark:text-green-500" : "text-red-700 dark:text-red-500"
                     }`}
                   >
                     ${money(rr.profit)}
                   </td>
                   <td
                     className={`p-3 text-right ${
-                      rr.profitPercent >= 0 ? "text-green-500" : "text-red-500"
+                      rr.profitPercent >= 0 ? "text-green-700 dark:text-green-500" : "text-red-700 dark:text-red-500"
                     }`}
                   >
                     {rr.profitPercent.toFixed(2)}%
@@ -637,14 +638,14 @@ export default function PortfolioPage() {
                           <button
                             onClick={() => handleSave(h.id)}
                             disabled={actionBusy}
-                            className="rounded-lg border border-gray-500 px-2 py-1"
+                            className="rounded-lg border border-[var(--input-border)] px-2 py-1"
                           >
                             Save
                           </button>
                           <button
                             onClick={() => setEditingId(null)}
                             disabled={actionBusy}
-                            className="rounded-lg border border-gray-500 px-2 py-1"
+                            className="rounded-lg border border-[var(--input-border)] px-2 py-1"
                           >
                             Cancel
                           </button>
@@ -658,14 +659,14 @@ export default function PortfolioPage() {
                               setEditBuyPrice(String(h.buyPrice));
                             }}
                             disabled={actionBusy || editingId !== null}
-                            className="rounded-lg border border-gray-500 px-2 py-1"
+                            className="rounded-lg border border-[var(--input-border)] px-2 py-1"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(h.id)}
                             disabled={actionBusy}
-                            className="rounded-lg border border-gray-500 px-2 py-1"
+                            className="rounded-lg border border-[var(--input-border)] px-2 py-1"
                           >
                             Delete
                           </button>
@@ -686,22 +687,22 @@ export default function PortfolioPage() {
           const editing = editingId === h.id;
           if (!r.available) {
             return (
-              <div key={h.id} className="flex flex-col gap-2 rounded-xl border border-gray-700 p-3">
+              <div key={h.id} className="flex flex-col gap-2 rounded-xl border border-[var(--card-border)] p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-2">
-                    <div className="h-8 w-8 shrink-0 rounded-full bg-gray-700" />
+                    <div className="h-8 w-8 shrink-0 rounded-full bg-[var(--skeleton)]" />
                     <div className="min-w-0">
                       <div className="truncate font-medium">{h.coinId}</div>
-                      <div className="text-xs uppercase text-gray-400">—</div>
+                      <div className="text-xs uppercase text-[var(--muted)]">—</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm text-gray-400">price unavailable</div>
+                    <div className="text-sm text-[var(--muted)]">price unavailable</div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <div className="text-xs text-gray-400">Amount</div>
+                    <div className="text-xs text-[var(--muted)]">Amount</div>
                     {editing ? (
                       <input
                         type="number"
@@ -709,14 +710,14 @@ export default function PortfolioPage() {
                         min={0}
                         value={editAmount}
                         onChange={(e) => setEditAmount(e.target.value)}
-                        className="min-h-11 w-full rounded border border-gray-500 bg-transparent p-2 text-base"
+                        className="min-h-11 w-full rounded border border-[var(--input-border)] bg-transparent p-2 text-base"
                       />
                     ) : (
                       <div className="font-medium">{money(h.amount)}</div>
                     )}
                   </div>
                   <div>
-                    <div className="text-xs text-gray-400">Buy price</div>
+                    <div className="text-xs text-[var(--muted)]">Buy price</div>
                     {editing ? (
                       <input
                         type="number"
@@ -724,15 +725,15 @@ export default function PortfolioPage() {
                         min={0}
                         value={editBuyPrice}
                         onChange={(e) => setEditBuyPrice(e.target.value)}
-                        className="min-h-11 w-full rounded border border-gray-500 bg-transparent p-2 text-base"
+                        className="min-h-11 w-full rounded border border-[var(--input-border)] bg-transparent p-2 text-base"
                       />
                     ) : (
                       <div className="font-medium">${money(h.buyPrice)}</div>
                     )}
                   </div>
                   <div className="col-span-2">
-                    <div className="text-xs text-gray-400">Current price</div>
-                    <div className="text-gray-400">price unavailable</div>
+                    <div className="text-xs text-[var(--muted)]">Current price</div>
+                    <div className="text-[var(--muted)]">price unavailable</div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -741,14 +742,14 @@ export default function PortfolioPage() {
                       <button
                         onClick={() => handleSave(h.id)}
                         disabled={actionBusy}
-                        className="min-h-11 rounded-lg border border-gray-500 px-2 py-1"
+                        className="min-h-11 rounded-lg border border-[var(--input-border)] px-2 py-1"
                       >
                         Save
                       </button>
                       <button
                         onClick={() => setEditingId(null)}
                         disabled={actionBusy}
-                        className="min-h-11 rounded-lg border border-gray-500 px-2 py-1"
+                        className="min-h-11 rounded-lg border border-[var(--input-border)] px-2 py-1"
                       >
                         Cancel
                       </button>
@@ -762,14 +763,14 @@ export default function PortfolioPage() {
                           setEditBuyPrice(String(h.buyPrice));
                         }}
                         disabled={actionBusy || editingId !== null}
-                        className="min-h-11 rounded-lg border border-gray-500 px-2 py-1"
+                        className="min-h-11 rounded-lg border border-[var(--input-border)] px-2 py-1"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDelete(h.id)}
                         disabled={actionBusy}
-                        className="min-h-11 rounded-lg border border-gray-500 px-2 py-1"
+                        className="min-h-11 rounded-lg border border-[var(--input-border)] px-2 py-1"
                       >
                         Delete
                       </button>
@@ -787,26 +788,26 @@ export default function PortfolioPage() {
             profitPercent: number;
           };
           return (
-            <div key={h.id} className="flex flex-col gap-2 rounded-xl border border-gray-700 p-3">
+            <div key={h.id} className="flex flex-col gap-2 rounded-xl border border-[var(--card-border)] p-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={rr.coin.image} alt={rr.coin.name} className="h-8 w-8 shrink-0 rounded-full" />
                   <div className="min-w-0">
                     <div className="truncate font-medium">{rr.coin.name}</div>
-                    <div className="text-xs uppercase text-gray-400">{rr.coin.symbol}</div>
+                    <div className="text-xs uppercase text-[var(--muted)]">{rr.coin.symbol}</div>
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
                   <div className="font-medium tabular-nums">${money(rr.currentValue)}</div>
-                  <div className={`text-xs tabular-nums ${rr.profit >= 0 ? "text-green-500" : "text-red-500"}`}>
+                  <div className={`text-xs tabular-nums ${rr.profit >= 0 ? "text-green-700 dark:text-green-500" : "text-red-700 dark:text-red-500"}`}>
                     ${money(rr.profit)} ({rr.profitPercent.toFixed(2)}%)
                   </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
-                  <div className="text-xs text-gray-400">Amount</div>
+                  <div className="text-xs text-[var(--muted)]">Amount</div>
                   {editing ? (
                     <input
                       type="number"
@@ -814,14 +815,14 @@ export default function PortfolioPage() {
                       min={0}
                       value={editAmount}
                       onChange={(e) => setEditAmount(e.target.value)}
-                      className="min-h-11 w-full rounded border border-gray-500 bg-transparent p-2 text-base"
+                      className="min-h-11 w-full rounded border border-[var(--input-border)] bg-transparent p-2 text-base"
                     />
                   ) : (
                     <div className="font-medium">{money(h.amount)}</div>
                   )}
                 </div>
                 <div>
-                  <div className="text-xs text-gray-400">Buy price</div>
+                  <div className="text-xs text-[var(--muted)]">Buy price</div>
                   {editing ? (
                     <input
                       type="number"
@@ -829,14 +830,14 @@ export default function PortfolioPage() {
                       min={0}
                       value={editBuyPrice}
                       onChange={(e) => setEditBuyPrice(e.target.value)}
-                      className="min-h-11 w-full rounded border border-gray-500 bg-transparent p-2 text-base"
+                      className="min-h-11 w-full rounded border border-[var(--input-border)] bg-transparent p-2 text-base"
                     />
                   ) : (
                     <div className="font-medium">${money(h.buyPrice)}</div>
                   )}
                 </div>
                 <div className="col-span-2">
-                  <div className="text-xs text-gray-400">Current price</div>
+                  <div className="text-xs text-[var(--muted)]">Current price</div>
                   <div className="font-medium">${money(rr.currentPrice)}</div>
                 </div>
               </div>
@@ -846,14 +847,14 @@ export default function PortfolioPage() {
                     <button
                       onClick={() => handleSave(h.id)}
                       disabled={actionBusy}
-                      className="min-h-11 rounded-lg border border-gray-500 px-2 py-1"
+                      className="min-h-11 rounded-lg border border-[var(--input-border)] px-2 py-1"
                     >
                       Save
                     </button>
                     <button
                       onClick={() => setEditingId(null)}
                       disabled={actionBusy}
-                      className="min-h-11 rounded-lg border border-gray-500 px-2 py-1"
+                      className="min-h-11 rounded-lg border border-[var(--input-border)] px-2 py-1"
                     >
                       Cancel
                     </button>
@@ -867,14 +868,14 @@ export default function PortfolioPage() {
                         setEditBuyPrice(String(h.buyPrice));
                       }}
                       disabled={actionBusy || editingId !== null}
-                      className="min-h-11 rounded-lg border border-gray-500 px-2 py-1"
+                      className="min-h-11 rounded-lg border border-[var(--input-border)] px-2 py-1"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(h.id)}
                       disabled={actionBusy}
-                      className="min-h-11 rounded-lg border border-gray-500 px-2 py-1"
+                      className="min-h-11 rounded-lg border border-[var(--input-border)] px-2 py-1"
                     >
                       Delete
                     </button>
@@ -937,7 +938,7 @@ export default function PortfolioPage() {
                         style={{ backgroundColor: d.color }}
                       />
                       <span className="min-w-0 flex-1 truncate">{d.name}</span>
-                      <span className="shrink-0 text-gray-400">{d.percent.toFixed(2)}%</span>
+                      <span className="shrink-0 text-[var(--muted)]">{d.percent.toFixed(2)}%</span>
                     </li>
                   ))}
                 </ul>
@@ -950,7 +951,7 @@ export default function PortfolioPage() {
                     <span>{a.name}</span>
                     <span>{a.percent.toFixed(2)}%</span>
                   </div>
-                  <div className="h-2 w-full rounded bg-gray-700">
+                  <div className="h-2 w-full rounded bg-[var(--skeleton)]">
                     <div
                       className="h-2 rounded bg-blue-500"
                       style={{ width: `${a.percent}%` }}

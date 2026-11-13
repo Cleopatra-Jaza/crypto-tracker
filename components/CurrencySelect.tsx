@@ -9,7 +9,7 @@ export default function CurrencySelect() {
     <select
       value={currency}
       onChange={(e) => setCurrency(e.target.value)}
-      className="rounded-lg border border-gray-500 bg-transparent px-2 py-1"
+      className="rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] px-2 py-1"
     >
       {CURRENCIES.map((c) => (
         <option key={c.code} value={c.code}>

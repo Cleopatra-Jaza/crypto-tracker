@@ -79,35 +79,35 @@ export default function MarketOverview({
   return (
     <div className="mb-6 min-w-0">
       <div className="hidden md:grid md:grid-cols-3 gap-4 min-w-0">
-      <div className="min-w-0 rounded-lg border border-gray-700 bg-gray-800 p-4">
-        <h3 className="mb-2 text-sm font-semibold text-gray-300">Fear & Greed</h3>
+      <div className="min-w-0 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-4">
+        <h3 className="mb-2 text-sm font-semibold text-[var(--foreground)]">Fear & Greed</h3>
         {fgLoading ? (
           <div className="space-y-2">
-            <div className="h-8 w-20 animate-pulse rounded bg-gray-700" />
-            <div className="h-3 w-full animate-pulse rounded bg-gray-700" />
+            <div className="h-8 w-20 animate-pulse rounded bg-[var(--skeleton)]" />
+            <div className="h-3 w-full animate-pulse rounded bg-[var(--skeleton)]" />
           </div>
         ) : fgError || !fearGreed ? (
-          <p className="text-sm text-gray-400">Unavailable</p>
+          <p className="text-sm text-[var(--muted)]">Unavailable</p>
         ) : (
           <>
             <div className="mb-1 flex items-baseline gap-2">
               <span className="text-2xl font-bold">{fearGreed.value}</span>
-              <span className="text-sm text-gray-300">{fearGreed.classification}</span>
+              <span className="text-sm text-[var(--foreground)]">{fearGreed.classification}</span>
             </div>
-            <div className="relative mt-2 h-2 w-full rounded bg-gray-700">
+            <div className="relative mt-2 h-2 w-full rounded bg-[var(--skeleton)]">
               <div
                 className={`absolute top-0 h-2 w-2 -translate-x-1/2 rounded-full ${fgColor(fearGreed.value)}`}
                 style={{ left: `${Math.min(100, Math.max(0, fearGreed.value))}%` }}
               />
               <div className="h-2 rounded bg-gradient-to-r from-red-500 via-gray-400 to-green-500 opacity-40" />
             </div>
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="mt-2 text-xs text-[var(--muted)]">
               Source:{" "}
               <a
                 href="https://alternative.me/crypto/fear-and-greed-index/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline hover:text-gray-300"
+                className="underline hover:text-[var(--foreground)]"
               >
                 alternative.me
               </a>
@@ -116,26 +116,26 @@ export default function MarketOverview({
         )}
       </div>
 
-      <div className="min-w-0 rounded-lg border border-gray-700 bg-gray-800 p-4">
+      <div className="min-w-0 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-4">
         <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-300">Top gainers / losers (24h)</h3>
+          <h3 className="text-sm font-semibold text-[var(--foreground)]">Top gainers / losers (24h)</h3>
         </div>
         <div className="mb-2 flex gap-1">
           <button
             onClick={() => setShowGainers(true)}
-            className={`rounded px-2 py-0.5 text-xs ${showGainers ? "bg-green-600 text-white" : "bg-gray-700 text-gray-300"}`}
+            className={`rounded px-2 py-0.5 text-xs ${showGainers ? "bg-green-600 text-white" : "bg-gray-700 text-[var(--foreground)]"}`}
           >
             Gainers
           </button>
           <button
             onClick={() => setShowGainers(false)}
-            className={`rounded px-2 py-0.5 text-xs ${!showGainers ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300"}`}
+            className={`rounded px-2 py-0.5 text-xs ${!showGainers ? "bg-red-600 text-white" : "bg-gray-700 text-[var(--foreground)]"}`}
           >
             Losers
           </button>
         </div>
         {(showGainers ? gainers : losers).length === 0 ? (
-          <p className="text-sm text-gray-400">No data</p>
+          <p className="text-sm text-[var(--muted)]">No data</p>
         ) : (
           <ul className="space-y-1 text-sm">
             {(showGainers ? gainers : losers).map((c) => (
@@ -150,7 +150,7 @@ export default function MarketOverview({
                     <span className={`whitespace-nowrap ${c.price_change_percentage_24h >= 0 ? "text-green-500" : "text-red-500"}`}>
                       {c.price_change_percentage_24h >= 0 ? "+" : ""}{c.price_change_percentage_24h.toFixed(2)}%
                     </span>
-                    <span className="ml-auto text-xs md:text-sm text-gray-400 whitespace-nowrap shrink-0">{formatMoney(c.current_price, currency)}</span>
+                    <span className="ml-auto text-xs md:text-sm text-[var(--muted)] whitespace-nowrap shrink-0">{formatMoney(c.current_price, currency)}</span>
                   </span>
                 </Link>
               </li>
@@ -159,18 +159,18 @@ export default function MarketOverview({
         )}
       </div>
 
-      <div className="min-w-0 rounded-lg border border-gray-700 bg-gray-800 p-4">
-        <h3 className="mb-2 text-sm font-semibold text-gray-300">Trending</h3>
+      <div className="min-w-0 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-4">
+        <h3 className="mb-2 text-sm font-semibold text-[var(--foreground)]">Trending</h3>
         {trLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-4 w-full animate-pulse rounded bg-gray-700" />
+              <div key={i} className="h-4 w-full animate-pulse rounded bg-[var(--skeleton)]" />
             ))}
           </div>
         ) : trError ? (
-          <p className="text-sm text-gray-400">Unavailable</p>
+          <p className="text-sm text-[var(--muted)]">Unavailable</p>
         ) : trending.length === 0 ? (
-          <p className="text-sm text-gray-400">No data</p>
+          <p className="text-sm text-[var(--muted)]">No data</p>
         ) : (
           <ul className="space-y-1 text-sm">
           {trending.map((c) => (
@@ -180,9 +180,9 @@ export default function MarketOverview({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={c.thumb} alt={c.name} className="h-4 w-4 shrink-0 rounded-full" />
                   <span className="truncate">{c.name}</span>
-                  <span className="uppercase text-gray-500 shrink-0">{c.symbol}</span>
+                  <span className="uppercase text-[var(--muted)] shrink-0">{c.symbol}</span>
                 </span>
-                {c.rank != null && <span className="text-xs shrink-0 text-gray-500">#{c.rank}</span>}
+                {c.rank != null && <span className="text-xs shrink-0 text-[var(--muted)]">#{c.rank}</span>}
               </Link>
             </li>
           ))}
@@ -193,35 +193,35 @@ export default function MarketOverview({
 
     <div className="md:hidden space-y-3 min-w-0">
       <div className="grid grid-cols-2 gap-3">
-        <div className="min-w-0 rounded-lg border border-gray-700 bg-gray-800 p-3">
-          <h3 className="mb-1 text-xs font-semibold text-gray-300">Fear & Greed</h3>
+        <div className="min-w-0 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-3">
+          <h3 className="mb-1 text-xs font-semibold text-[var(--foreground)]">Fear & Greed</h3>
           {fgLoading ? (
             <div className="space-y-2">
-              <div className="h-6 w-12 animate-pulse rounded bg-gray-700" />
-              <div className="h-2 w-full animate-pulse rounded bg-gray-700" />
+              <div className="h-6 w-12 animate-pulse rounded bg-[var(--skeleton)]" />
+              <div className="h-2 w-full animate-pulse rounded bg-[var(--skeleton)]" />
             </div>
           ) : fgError || !fearGreed ? (
-            <p className="text-sm text-gray-400">Unavailable</p>
+            <p className="text-sm text-[var(--muted)]">Unavailable</p>
           ) : (
             <>
               <div className="mb-1 flex items-baseline gap-2">
                 <span className={`text-2xl font-bold ${fgTextColor(fearGreed.value)}`}>{fearGreed.value}</span>
                 <span className={`text-xs ${fgTextColor(fearGreed.value)}`}>{fearGreed.classification}</span>
               </div>
-              <div className="relative mt-1 h-1.5 w-full rounded bg-gray-700">
+              <div className="relative mt-1 h-1.5 w-full rounded bg-[var(--skeleton)]">
                 <div
                   className={`absolute top-0 h-1.5 w-1.5 -translate-x-1/2 rounded-full ${fgColor(fearGreed.value)}`}
                   style={{ left: `${Math.min(100, Math.max(0, fearGreed.value))}%` }}
                 />
                 <div className="h-1.5 rounded bg-gradient-to-r from-red-500 via-gray-400 to-green-500 opacity-40" />
               </div>
-              <p className="mt-1 text-[11px] text-gray-500">
+              <p className="mt-1 text-[11px] text-[var(--muted)]">
                 Source:{" "}
                 <a
                   href="https://alternative.me/crypto/fear-and-greed-index/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline hover:text-gray-300"
+                  className="underline hover:text-[var(--foreground)]"
                 >
                   alternative.me
                 </a>
@@ -229,10 +229,10 @@ export default function MarketOverview({
             </>
           )}
         </div>
-        <div className="min-w-0 rounded-lg border border-gray-700 bg-gray-800 p-3">
-          <h3 className="mb-1 text-xs font-semibold text-gray-300">Top gainer 24h</h3>
+        <div className="min-w-0 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-3">
+          <h3 className="mb-1 text-xs font-semibold text-[var(--foreground)]">Top gainer 24h</h3>
           {gainers.length === 0 ? (
-            <p className="text-sm text-gray-400">No data</p>
+            <p className="text-sm text-[var(--muted)]">No data</p>
           ) : (
             <Link href={`/coin/${gainers[0].id}`} className="block">
               <div className="text-sm font-medium uppercase">{gainers[0].symbol}</div>
@@ -244,14 +244,14 @@ export default function MarketOverview({
         </div>
       </div>
       <div className="min-w-0">
-        <h3 className="mb-1 text-xs font-semibold text-gray-300">Trending</h3>
+        <h3 className="mb-1 text-xs font-semibold text-[var(--foreground)]">Trending</h3>
         <div className="w-full min-w-0 -mx-4 px-4 overflow-x-auto">
           <div className="flex gap-2">
             {trending.map((c) => (
               <Link
                 key={c.id}
                 href={`/coin/${c.id}`}
-                className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-gray-600 px-3 py-1 text-sm"
+                className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-[var(--card-border)] px-3 py-1 text-sm"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={c.thumb} alt={c.name} className="h-5 w-5 rounded-full" />
@@ -269,7 +269,7 @@ export default function MarketOverview({
 function fgTextColor(v: number) {
   if (v <= 24) return "text-red-500";
   if (v <= 44) return "text-orange-500";
-  if (v <= 55) return "text-gray-400";
+  if (v <= 55) return "text-[var(--muted)]";
   if (v <= 75) return "text-lime-500";
   return "text-green-500";
 }
