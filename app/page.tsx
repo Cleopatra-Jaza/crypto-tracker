@@ -315,11 +315,11 @@ export default function Home() {
   }
 
   function headerClass(extra?: string) {
-    return `p-3 cursor-pointer select-none ${extra ?? ""}`;
+    return `p-2 md:p-3 text-sm md:text-base cursor-pointer select-none ${extra ?? ""}`;
   }
 
   return (
-    <main className="mx-auto max-w-4xl p-6">
+    <main className="mx-auto max-w-4xl w-full min-w-0 px-4 py-6 md:px-6">
       <h1 className="mb-4 text-3xl font-bold">Crypto Tracker</h1>
 
       <MarketOverview coins={coins} currency={currency} />
@@ -365,39 +365,39 @@ export default function Home() {
       />
 
       {loading ? (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
+        <div className="overflow-x-auto w-full min-w-0">
+          <table className="min-w-[760px] md:min-w-0 md:w-full text-left">
             <tbody>
               {Array.from({ length: 10 }).map((_, i) => (
                 <tr key={i} className="border-b border-gray-700">
-                  <td className="p-3">
+                  <td className="p-2 md:p-3 w-10 min-w-10 sticky left-0 z-10 bg-[var(--background)] md:static">
                     <div className="h-5 w-5 animate-pulse rounded bg-gray-700" />
                   </td>
-                  <td className="p-3">
+                  <td className="p-2 md:p-3 text-sm md:text-base whitespace-nowrap">
                     <div className="h-4 w-6 animate-pulse rounded bg-gray-700" />
                   </td>
-                  <td className="p-3">
+                  <td className="p-2 md:p-3 text-sm md:text-base">
                     <div className="flex items-center gap-3">
                       <div className="h-6 w-6 animate-pulse rounded-full bg-gray-700" />
                       <div className="h-4 w-24 animate-pulse rounded bg-gray-700" />
                     </div>
                   </td>
-                  <td className="p-3 text-right">
+                  <td className="p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap">
                     <div className="ml-auto h-4 w-16 animate-pulse rounded bg-gray-700" />
                   </td>
-                  <td className="p-3 text-right">
+                  <td className="p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap">
                     <div className="ml-auto h-4 w-12 animate-pulse rounded bg-gray-700" />
                   </td>
-                  <td className="p-3 text-right hidden md:table-cell">
+                  <td className="p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap">
                     <div className="ml-auto h-4 w-12 animate-pulse rounded bg-gray-700" />
                   </td>
-                  <td className="p-3 text-right hidden md:table-cell">
+                  <td className="p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap">
                     <div className="ml-auto h-4 w-12 animate-pulse rounded bg-gray-700" />
                   </td>
-                  <td className="p-3 text-right hidden md:table-cell">
+                  <td className="p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap">
                     <div className="ml-auto h-4 w-16 animate-pulse rounded bg-gray-700" />
                   </td>
-                  <td className="p-3 text-right hidden md:table-cell">
+                  <td className="p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap">
                     <div className="ml-auto h-4 w-16 animate-pulse rounded bg-gray-700" />
                   </td>
                 </tr>
@@ -414,47 +414,48 @@ export default function Home() {
       )}
 
       {!loading && (
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
+      <>
+      <div className="overflow-x-auto w-full min-w-0">
+        <table className="min-w-[760px] md:min-w-0 md:w-full text-left">
           <thead>
             <tr className="border-b border-gray-500">
-              <th className="p-3"></th>
-              <th className="p-3">#</th>
+              <th className="p-2 md:p-3 w-10 min-w-10 sticky left-0 z-10 bg-[var(--background)] md:static"></th>
+              <th className="p-2 md:p-3 text-sm md:text-base whitespace-nowrap sticky left-10 z-10 bg-[var(--background)] md:static">#</th>
               <th
-                className={headerClass()}
+                className={headerClass("sticky left-10 z-10 bg-[var(--background)] md:static")}
                 onClick={() => handleSort("name")}
               >
                 Coin{arrow("name")}
               </th>
               <th
-                className={headerClass("text-right")}
+                className={headerClass("text-right whitespace-nowrap")}
                 onClick={() => handleSort("current_price")}
               >
                 Price{arrow("current_price")}
               </th>
               <th
-                className={headerClass("text-right")}
+                className={headerClass("text-right whitespace-nowrap")}
                 onClick={() => handleSort("price_change_percentage_24h")}
               >
                 24h{arrow("price_change_percentage_24h")}
               </th>
               <th
-                className={headerClass("text-right hidden md:table-cell")}
+                className={headerClass("text-right whitespace-nowrap")}
                 onClick={() =>
                   handleSort("price_change_percentage_7d_in_currency")
                 }
               >
                 7d{arrow("price_change_percentage_7d_in_currency")}
               </th>
-              <th className="p-3 text-right hidden md:table-cell">30d</th>
+              <th className="p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap">30d</th>
               <th
-                className={headerClass("text-right hidden md:table-cell")}
+                className={headerClass("text-right whitespace-nowrap")}
                 onClick={() => handleSort("market_cap")}
               >
                 Market cap{arrow("market_cap")}
               </th>
               <th
-                className={headerClass("text-right hidden md:table-cell")}
+                className={headerClass("text-right whitespace-nowrap")}
                 onClick={() => handleSort("total_volume")}
               >
                 Volume{arrow("total_volume")}
@@ -469,7 +470,7 @@ export default function Home() {
               const pct30 = coin.price_change_percentage_30d_in_currency;
               return (
                 <tr key={coin.id} className="border-b border-gray-700">
-                  <td className="p-3">
+                  <td className="p-2 md:p-3 w-10 min-w-10 sticky left-0 z-10 bg-[var(--background)] md:static whitespace-nowrap">
                     <button
                       onClick={() => toggleWatch(coin.id)}
                       className="text-xl"
@@ -478,24 +479,24 @@ export default function Home() {
                       {starred ? "⭐" : "☆"}
                     </button>
                   </td>
-                  <td className="p-3">{coin.market_cap_rank ?? "-"}</td>
-                  <td className="p-3">
+                  <td className="p-2 md:p-3 text-sm md:text-base whitespace-nowrap">{coin.market_cap_rank ?? "-"}</td>
+                  <td className="p-2 md:p-3 sticky left-10 z-10 bg-[var(--background)] md:static border-r border-gray-700">
                     <div className="flex items-center gap-3">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={coin.image} alt={coin.name} className="h-6 w-6" />
+                      <img src={coin.image} alt={coin.name} className="h-6 w-6 shrink-0" />
                       <Link
                         href={`/coin/${coin.id}`}
-                        className="font-medium hover:underline"
+                        className="font-medium hover:underline max-w-[9rem] truncate"
                       >
                         {coin.name}
                       </Link>
-                      <span className="text-sm uppercase text-gray-400">
+                      <span className="text-sm uppercase text-gray-400 shrink-0">
                         {coin.symbol}
                       </span>
                     </div>
                   </td>
                   <td
-                    className={`p-3 text-right transition-colors duration-500 ${
+                    className={`p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap transition-colors duration-500 ${
                       flash[coin.id] === "up"
                         ? "bg-green-500/20 text-green-500"
                         : flash[coin.id] === "down"
@@ -506,14 +507,14 @@ export default function Home() {
                     {formatMoney(coin.current_price, currency)}
                   </td>
                   <td
-                    className={`p-3 text-right ${
+                    className={`p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap ${
                       change >= 0 ? "text-green-500" : "text-red-500"
                     }`}
                   >
                     {change.toFixed(2)}%
                   </td>
                   <td
-                    className={`p-3 text-right hidden md:table-cell ${
+                    className={`p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap ${
                       pct7 == null
                         ? ""
                         : pct7 >= 0
@@ -524,7 +525,7 @@ export default function Home() {
                     {pct7 == null ? "-" : `${pct7.toFixed(2)}%`}
                   </td>
                   <td
-                    className={`p-3 text-right hidden md:table-cell ${
+                    className={`p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap ${
                       pct30 == null
                         ? ""
                         : pct30 >= 0
@@ -534,10 +535,10 @@ export default function Home() {
                   >
                     {pct30 == null ? "-" : `${pct30.toFixed(2)}%`}
                   </td>
-                  <td className="p-3 text-right hidden md:table-cell">
+                  <td className="p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap">
                     {formatCompactMoney(coin.market_cap, currency)}
                   </td>
-                  <td className="p-3 text-right hidden md:table-cell">
+                  <td className="p-2 md:p-3 text-sm md:text-base text-right whitespace-nowrap">
                     {formatCompactMoney(coin.total_volume, currency)}
                   </td>
                 </tr>
@@ -546,6 +547,8 @@ export default function Home() {
           </tbody>
         </table>
       </div>
+      <p className="mt-2 text-xs text-gray-400 md:hidden">Swipe the table sideways to see more columns.</p>
+      </>
       )}
 
       {search.length >= 2 && !showWatchlist && (

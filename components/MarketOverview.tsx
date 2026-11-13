@@ -77,8 +77,8 @@ export default function MarketOverview({
   }
 
   return (
-    <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-      <div className="rounded-lg border border-gray-700 bg-gray-800 p-4">
+    <div className="mb-6 grid grid-cols-1 gap-4 min-w-0 md:grid-cols-3">
+      <div className="min-w-0 rounded-lg border border-gray-700 bg-gray-800 p-4">
         <h3 className="mb-2 text-sm font-semibold text-gray-300">Fear & Greed</h3>
         {fgLoading ? (
           <div className="space-y-2">
@@ -115,7 +115,7 @@ export default function MarketOverview({
         )}
       </div>
 
-      <div className="rounded-lg border border-gray-700 bg-gray-800 p-4">
+      <div className="min-w-0 rounded-lg border border-gray-700 bg-gray-800 p-4">
         <div className="mb-2 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-300">Top gainers / losers (24h)</h3>
         </div>
@@ -139,17 +139,17 @@ export default function MarketOverview({
           <ul className="space-y-1 text-sm">
             {(showGainers ? gainers : losers).map((c) => (
               <li key={c.id}>
-                <Link href={`/coin/${c.id}`} className="flex items-center justify-between gap-2 hover:underline">
-                  <span className="flex items-center gap-2 truncate">
+                <Link href={`/coin/${c.id}`} className="flex items-center gap-2 min-w-0 hover:underline">
+                  <span className="flex items-center gap-2 min-w-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={c.image} alt={c.name} className="h-4 w-4 rounded-full" />
-                    <span className="uppercase">{c.symbol}</span>
+                    <img src={c.image} alt={c.name} className="h-4 w-4 shrink-0 rounded-full" />
+                    <span className="truncate uppercase">{c.symbol}</span>
                   </span>
-                  <span className="flex items-center gap-2">
-                    <span className={c.price_change_percentage_24h >= 0 ? "text-green-500" : "text-red-500"}>
+                  <span className="flex items-center gap-2 shrink-0">
+                    <span className={`whitespace-nowrap ${c.price_change_percentage_24h >= 0 ? "text-green-500" : "text-red-500"}`}>
                       {c.price_change_percentage_24h >= 0 ? "+" : ""}{c.price_change_percentage_24h.toFixed(2)}%
                     </span>
-                    <span className="text-gray-400">{formatMoney(c.current_price, currency)}</span>
+                    <span className="ml-auto text-xs md:text-sm text-gray-400 whitespace-nowrap shrink-0">{formatMoney(c.current_price, currency)}</span>
                   </span>
                 </Link>
               </li>
@@ -158,7 +158,7 @@ export default function MarketOverview({
         )}
       </div>
 
-      <div className="rounded-lg border border-gray-700 bg-gray-800 p-4">
+      <div className="min-w-0 rounded-lg border border-gray-700 bg-gray-800 p-4">
         <h3 className="mb-2 text-sm font-semibold text-gray-300">Trending</h3>
         {trLoading ? (
           <div className="space-y-2">
@@ -172,19 +172,19 @@ export default function MarketOverview({
           <p className="text-sm text-gray-400">No data</p>
         ) : (
           <ul className="space-y-1 text-sm">
-            {trending.map((c) => (
-              <li key={c.id}>
-                <Link href={`/coin/${c.id}`} className="flex items-center justify-between gap-2 hover:underline">
-                  <span className="flex items-center gap-2 truncate">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={c.thumb} alt={c.name} className="h-4 w-4 rounded-full" />
-                    <span>{c.name}</span>
-                    <span className="uppercase text-gray-500">{c.symbol}</span>
-                  </span>
-                  {c.rank != null && <span className="text-xs text-gray-500">#{c.rank}</span>}
-                </Link>
-              </li>
-            ))}
+          {trending.map((c) => (
+            <li key={c.id}>
+              <Link href={`/coin/${c.id}`} className="flex items-center justify-between gap-2 min-w-0 hover:underline">
+                <span className="flex items-center gap-2 min-w-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={c.thumb} alt={c.name} className="h-4 w-4 shrink-0 rounded-full" />
+                  <span className="truncate">{c.name}</span>
+                  <span className="uppercase text-gray-500 shrink-0">{c.symbol}</span>
+                </span>
+                {c.rank != null && <span className="text-xs shrink-0 text-gray-500">#{c.rank}</span>}
+              </Link>
+            </li>
+          ))}
           </ul>
         )}
       </div>
