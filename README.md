@@ -1,5 +1,7 @@
 # Crypto Tracker
 
+[![CI](https://github.com/Cleopatra-Jaza/crypto-tracker/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Cleopatra-Jaza/crypto-tracker/actions/workflows/ci.yml)
+
 Real-time cryptocurrency tracker built with Next.js.
 
 **Live demo:** https://crypto-tracker-kappa-ivory.vercel.app
@@ -31,6 +33,8 @@ Real-time cryptocurrency tracker built with Next.js.
   - Price flash
   - Installable PWA
   - Responsive layout
+  - Phone-first layouts with a bottom navigation bar
+  - Light and dark themes
 
 ## Tech stack
 
@@ -67,6 +71,29 @@ npm run dev
 
 ![Portfolio tracker](public/screenshots/portfolio.png)
 *Portfolio: holdings, profit/loss and allocation*
+
+### Phone
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="public/screenshots/mobile-home.jpeg" alt="Phone: market overview and coin list with bottom navigation" width="240" /><br />
+      <em>Phone: market overview and coin list with bottom navigation</em>
+    </td>
+    <td align="center">
+      <img src="public/screenshots/mobile-coin.jpeg" alt="Phone: coin page with chart and range buttons" width="240" /><br />
+      <em>Phone: coin page with chart and range buttons</em>
+    </td>
+    <td align="center">
+      <img src="public/screenshots/mobile-light.jpeg" alt="Phone: light mode" width="240" /><br />
+      <em>Phone: light mode</em>
+    </td>
+  </tr>
+</table>
+
+## Testing
+
+Unit tests (Vitest) for indicators, currency formatting and CSV export run with npm test and on every push through GitHub Actions (type check, lint, tests, build).
 
 ## Credits
 
