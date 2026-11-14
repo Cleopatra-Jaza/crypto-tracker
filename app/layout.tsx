@@ -9,6 +9,7 @@ import CurrencySelect from "@/components/CurrencySelect";
 import ThemeToggle from "@/components/ThemeToggle";
 import AlertChecker from "@/components/AlertChecker";
 import BottomNav from "@/components/BottomNav";
+import { SITE } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -82,6 +83,25 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <div className="pb-24 md:pb-0">
         {children}
       </div>
+      <footer className="mt-auto px-4 py-6 pb-24 text-center text-xs text-[var(--muted)] md:pb-6">
+        <p>
+          {SITE.name} · Data: CoinGecko, Binance, alternative.me · Not financial advice
+        </p>
+        <div className="mt-2 flex items-center justify-center gap-1">
+          <Link
+            href="/privacy"
+            className="inline-flex min-h-11 items-center px-2 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--foreground)]"
+          >
+            Privacy
+          </Link>
+          <Link
+            href="/terms"
+            className="inline-flex min-h-11 items-center px-2 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--foreground)]"
+          >
+            Terms
+          </Link>
+        </div>
+      </footer>
       <BottomNav />
       <AlertChecker />
     </body>
