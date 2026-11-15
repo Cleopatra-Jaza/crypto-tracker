@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { formatMoney } from "@/lib/currency";
 
 type Coin = {
@@ -142,8 +143,7 @@ export default function MarketOverview({
               <li key={c.id}>
                 <Link href={`/coin/${c.id}`} className="flex items-center gap-2 min-w-0 hover:underline">
                   <span className="flex items-center gap-2 min-w-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={c.image} alt={c.name} className="h-4 w-4 shrink-0 rounded-full" />
+                    <Image src={c.image} alt={c.name} width={16} height={16} unoptimized className="h-4 w-4 shrink-0 rounded-full" />
                     <span className="truncate uppercase">{c.symbol}</span>
                   </span>
                   <span className="flex items-center gap-2 shrink-0">
@@ -177,8 +177,7 @@ export default function MarketOverview({
             <li key={c.id}>
               <Link href={`/coin/${c.id}`} className="flex items-center justify-between gap-2 min-w-0 hover:underline">
                 <span className="flex items-center gap-2 min-w-0">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={c.thumb} alt={c.name} className="h-4 w-4 shrink-0 rounded-full" />
+                  <Image src={c.thumb} alt={c.name} width={16} height={16} unoptimized className="h-4 w-4 shrink-0 rounded-full" />
                   <span className="truncate">{c.name}</span>
                   <span className="uppercase text-[var(--muted)] shrink-0">{c.symbol}</span>
                 </span>
@@ -253,8 +252,7 @@ export default function MarketOverview({
                 href={`/coin/${c.id}`}
                 className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-[var(--card-border)] px-3 py-1 text-sm"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={c.thumb} alt={c.name} className="h-5 w-5 rounded-full" />
+                <Image src={c.thumb} alt={c.name} width={20} height={20} unoptimized className="h-5 w-5 rounded-full" />
                 <span className="uppercase">{c.symbol}</span>
               </Link>
             ))}

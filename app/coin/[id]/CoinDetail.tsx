@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useCurrency } from "@/lib/useCurrency";
 import useIsDark from "@/lib/useTheme";
 import { formatMoney, formatCompactMoney } from "@/lib/currency";
@@ -708,7 +709,7 @@ export default function CoinDetail({ id }: { id: string }) {
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
         <div className="flex min-w-0 items-center gap-3">
           {details?.image ? (
-            <img src={details.image} alt={details.name ?? id} className="h-10 w-10 shrink-0 rounded md:h-12 md:w-12" />
+            <Image src={details.image} alt={details.name ?? id} width={48} height={48} unoptimized className="h-10 w-10 shrink-0 rounded md:h-12 md:w-12" />
           ) : (
             <div className="h-10 w-10 shrink-0 rounded bg-[var(--skeleton)] animate-pulse md:h-12 md:w-12" />
           )}

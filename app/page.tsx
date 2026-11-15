@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useCurrency } from "@/lib/useCurrency";
 import { formatCompactMoney, formatMoney } from "@/lib/currency";
 import { useLivePrices } from "@/lib/useLivePrices";
@@ -516,8 +517,7 @@ export default function Home() {
                   <td className="p-2 md:p-3 text-sm md:text-base whitespace-nowrap">{coin.market_cap_rank ?? "-"}</td>
                   <td className="p-2 md:p-3 sticky left-10 z-10 bg-[var(--background)] md:static border-r border-[var(--card-border)]">
                     <div className="flex items-center gap-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={coin.image} alt={coin.name} className="h-6 w-6 shrink-0" />
+                      <Image src={coin.image} alt={coin.name} width={24} height={24} unoptimized className="h-6 w-6 shrink-0" />
                       <Link
                         href={`/coin/${coin.id}`}
                         className="font-medium hover:underline max-w-[9rem] truncate"
@@ -624,7 +624,7 @@ export default function Home() {
                   <li key={r.id} className="p-3 border-b border-[var(--card-border)] flex items-center gap-3">
                     <Link href={`/coin/${r.id}`} className="flex items-center gap-3">
                       {r.thumb ? (
-                        <img src={r.thumb} alt={r.name} className="h-6 w-6 rounded-full" />
+                        <Image src={r.thumb} alt={r.name} width={24} height={24} unoptimized className="h-6 w-6 rounded-full" />
                       ) : (
                         <div className="h-6 w-6 rounded-full bg-[var(--skeleton)] animate-pulse" />
                       )}

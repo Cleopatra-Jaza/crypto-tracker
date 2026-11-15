@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { formatCompactMoney, formatMoney } from "@/lib/currency";
 
 type Coin = {
@@ -233,8 +234,7 @@ export default function MobileCoinList({
               <div key={coin.id} className={`flex items-center gap-3 border-b border-[var(--card-border)] py-3 min-h-[64px] ${flashClass}`}>
                 <Link href={`/coin/${coin.id}`} className="flex flex-1 items-center gap-3 min-w-0">
                   <span className="w-6 shrink-0 text-xs text-[var(--muted)]">{coin.market_cap_rank ?? "-"}</span>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={coin.image} alt={coin.name} className="h-8 w-8 shrink-0 rounded-full" />
+                  <Image src={coin.image} alt={coin.name} width={32} height={32} unoptimized className="h-8 w-8 shrink-0 rounded-full" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-medium">{coin.name}</div>
                     <div className="truncate text-xs text-[var(--muted)]">
@@ -286,7 +286,7 @@ export default function MobileCoinList({
                   >
                     <span className="w-6 shrink-0 text-xs text-[var(--muted)]">{r.rank ?? "-"}</span>
                     {r.thumb ? (
-                      <img src={r.thumb} alt={r.name} className="h-8 w-8 shrink-0 rounded-full" />
+                      <Image src={r.thumb} alt={r.name} width={32} height={32} unoptimized className="h-8 w-8 shrink-0 rounded-full" />
                     ) : (
                       <div className="h-8 w-8 shrink-0 rounded-full bg-[var(--skeleton)] animate-pulse" />
                     )}

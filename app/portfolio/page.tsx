@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 import { escapeCsvCell, buildCsv } from "@/lib/csv";
 import { useLivePrices } from "@/lib/useLivePrices";
@@ -615,10 +616,12 @@ export default function PortfolioPage() {
                 <tr key={h.id} className="border-b border-[var(--card-border)]">
                   <td className="p-3">
                     <div className="flex items-center gap-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <Image
                         src={rr.coin.image}
                         alt={rr.coin.name}
+                        width={24}
+                        height={24}
+                        unoptimized
                         className="h-6 w-6"
                       />
                       <span className="font-medium">{rr.coin.name}</span>
@@ -831,8 +834,7 @@ export default function PortfolioPage() {
             <div key={h.id} className="flex flex-col gap-2 rounded-xl border border-[var(--card-border)] p-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={rr.coin.image} alt={rr.coin.name} className="h-8 w-8 shrink-0 rounded-full" />
+                  <Image src={rr.coin.image} alt={rr.coin.name} width={32} height={32} unoptimized className="h-8 w-8 shrink-0 rounded-full" />
                   <div className="min-w-0">
                     <div className="truncate font-medium">{rr.coin.name}</div>
                     <div className="text-xs uppercase text-[var(--muted)]">{rr.coin.symbol}</div>
