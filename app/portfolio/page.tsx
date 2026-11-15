@@ -376,7 +376,22 @@ export default function PortfolioPage() {
 
   return (
     <main className="mx-auto max-w-4xl w-full min-w-0 px-4 py-6 pb-24 md:px-6 md:py-6 md:pb-0">
-      <h1 className="mb-4 text-xl font-medium md:text-3xl md:font-bold">Portfolio</h1>
+      <div className="mb-4 flex items-center gap-3">
+        <h1 className="text-xl font-medium md:text-3xl md:font-bold">Portfolio</h1>
+        {liveStatus === "live" && (
+          <span
+            className="inline-flex items-center gap-2 rounded-full border border-green-500/30 bg-green-500/10 px-2.5 py-1 text-xs font-medium text-green-700 dark:text-green-400"
+            title="Live prices from Binance"
+            aria-label="Live prices from Binance"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+            </span>
+            Live
+          </span>
+        )}
+      </div>
 
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-700 dark:text-red-500">Error: {error}</p>}
