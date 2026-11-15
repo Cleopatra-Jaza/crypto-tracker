@@ -13,6 +13,7 @@ type Alert = {
   direction: string;
   triggeredAt: string | null;
   createdAt: string;
+  notifyEmail?: boolean;
 };
 
 export default function AlertsView() {
@@ -29,6 +30,7 @@ export default function AlertsView() {
   const [checkMsg, setCheckMsg] = useState("");
   const [checkErr, setCheckErr] = useState("");
   const [notif, setNotif] = useState<NotificationPermission | "unsupported">("default");
+  const [notifyEmail, setNotifyEmail] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -82,7 +84,7 @@ export default function AlertsView() {
       const res = await fetch("/api/alerts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ coinId: coin.id, coinName: coin.name, targetPrice: tp, direction }),
+        body: JSON.stringify({ coinId: coin.id, coinName: coin.name, targetPrice: tp, direction, notifyEmail }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -163,7 +165,7 @@ export default function AlertsView() {
     <main className="mx-auto max-w-4xl w-full min-w-0 px-4 py-6 pb-24 md:px-6 md:py-6 md:pb-0">
       <h1 className="mb-2 text-xl font-medium md:mb-4 md:text-3xl md:font-bold">Price alerts</h1>
       <p className="mb-4 text-xs text-[var(--muted)] md:text-sm">
-        Alerts are checked every minute while this site is open in a browser tab. All prices are in USD.
+        Alerts are checked every minute while this site is open in a browser tab, and email alerts are also checked every few minutes in the background. All prices are in USD.
       </p>
 
       <div className="mb-4 grid grid-cols-1 gap-2 md:flex md:flex-wrap md:items-center">
@@ -237,6 +239,20 @@ export default function AlertsView() {
             />
           </div>
         </div>
+        <div>
+          <label className="flex min-h-11 items-start gap-3 text-sm md:min-h-0">
+            <input
+              type="checkbox"
+              checked={notifyEmail}
+              onChange={(e) => setNotifyEmail(e.target.checked)}
+              className="mt-0.5 h-5 w-5 shrink-0"
+            />
+            <span>Also email me when this alert triggers</span>
+          </label>
+          <p className="mt-1 break-words text-xs text-[var(--muted)]">
+            The email goes to your sign-in email address. It may land in your spam folder at first, please mark it as not spam. Up to 10 active email alerts.
+          </p>
+        </div>
         {error && <p className="text-sm text-red-700 dark:text-red-500">{error}</p>}
         <button
           type="submit"
@@ -280,6 +296,9 @@ export default function AlertsView() {
                           {a.direction === "above" ? "Goes above" : "Drops below"}{" "}
                           {formatMoney(a.targetPrice, "usd")}
                         </div>
+                        {a.notifyEmail && (
+                          <div className="text-xs text-[var(--muted)]">Email on</div>
+                        )}
                       </div>
                     </div>
                     <button
@@ -296,6 +315,9 @@ export default function AlertsView() {
                   <li key={a.id} className="flex items-center justify-between rounded border border-[var(--card-border)] bg-[var(--card-bg)] p-3">
                     <span>
                       {a.coinName} {a.direction} {formatMoney(a.targetPrice, "usd")}
+                      {a.notifyEmail && (
+                        <span className="ml-2 text-xs text-[var(--muted)]">Email on</span>
+                      )}
                     </span>
                     <button
                       onClick={() => onDelete(a.id)}
@@ -334,6 +356,9 @@ export default function AlertsView() {
                           {a.direction === "above" ? "Goes above" : "Drops below"}{" "}
                           {formatMoney(a.targetPrice, "usd")}
                         </div>
+                        {a.notifyEmail && (
+                          <div className="text-xs text-[var(--muted)]">Email on</div>
+                        )}
                         {a.triggeredAt && (
                           <div className="text-xs text-[var(--muted)]">
                             {new Date(a.triggeredAt).toLocaleString()}
@@ -355,6 +380,9 @@ export default function AlertsView() {
                   <li key={a.id} className="flex items-center justify-between rounded border border-[var(--card-border)] bg-[var(--card-bg)] p-3">
                     <span>
                       {a.coinName} {a.direction} {formatMoney(a.targetPrice, "usd")}
+                      {a.notifyEmail && (
+                        <span className="ml-2 text-xs text-[var(--muted)]">Email on</span>
+                      )}
                       {a.triggeredAt && (
                         <span className="ml-2 text-xs text-[var(--muted)]">
                           {new Date(a.triggeredAt).toLocaleString()}
