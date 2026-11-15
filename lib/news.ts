@@ -57,6 +57,15 @@ function toText(value: unknown): string {
   return "";
 }
 
+// Cut at the last space before the limit so words are never split.
+function truncateSummary(text: string): string {
+  if (text.length <= MAX_SUMMARY_LENGTH) return text;
+  const slice = text.slice(0, MAX_SUMMARY_LENGTH);
+  const lastSpace = slice.lastIndexOf(" ");
+  const base = lastSpace > 0 ? slice.slice(0, lastSpace) : slice;
+  return `${base.trimEnd()}…`;
+}
+
 const parser = new XMLParser({
   ignoreAttributes: true,
   processEntities: false,
@@ -93,7 +102,7 @@ export function parseRssItems(xml: string, source: string): NewsItem[] {
       if (!/^https?:\/\//i.test(link)) continue;
 
       const rawSummary = toText(item.description ?? item.summary);
-      const summary = stripHtml(rawSummary).slice(0, MAX_SUMMARY_LENGTH);
+      const summary = truncateSummary(stripHtml(rawSummary));
 
       const rawDate = toText(item.pubDate ?? item.published);
       const parsedDate = rawDate.length > 0 ? Date.parse(rawDate) : Number.NaN;

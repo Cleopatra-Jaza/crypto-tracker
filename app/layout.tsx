@@ -70,6 +70,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/portfolio">Portfolio</Link>
             <Link href="/compare">Compare</Link>
             <Link href="/alerts">Alerts</Link>
+            <Link href="/news">News</Link>
           </nav>
         </div>
         <div className="flex items-center gap-2 min-w-0 [&_button]:min-h-10 [&_select]:min-h-10 md:[&_button]:min-h-0 md:[&_select]:min-h-0 [&_select]:text-sm">

@@ -43,6 +43,17 @@ const tabs = [
       </svg>
     ),
   },
+  {
+    href: "/news",
+    label: "News",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+        <path d="M4 5h13a1 1 0 0 1 1 1v13H5a1 1 0 0 1-1-1V5Z" />
+        <path d="M18 8h2v9a2 2 0 0 1-2 2h-1" />
+        <path d="M7 9h7M7 12h7M7 15h4" />
+      </svg>
+    ),
+  },
 ];
 
 export default function BottomNav() {

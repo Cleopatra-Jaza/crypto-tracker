@@ -82,18 +82,43 @@ describe("parseRssItems", () => {
     expect(items[0].summary).toBe("Bitcoin & ETH rally");
   });
 
-  it("cuts the summary to 160 characters", () => {
-    const longText = "a".repeat(200);
+  it("cuts the summary at the last space and adds an ellipsis", () => {
     const xml = wrap(
       `<item><title>Long</title><link>https://example.com/long</link>` +
-        `<description>${longText}</description></item>`
+        `<description>${"ab ".repeat(60)}</description></item>`
     );
 
     const items = parseRssItems(xml, "Cointelegraph");
 
     expect(items).toHaveLength(1);
-    expect(items[0].summary).toHaveLength(160);
-    expect(items[0].summary).toBe("a".repeat(160));
+    const summary = items[0].summary;
+    expect(summary.endsWith("…")).toBe(true);
+    expect(summary.endsWith("ab…")).toBe(true);
+    expect(summary).toHaveLength(159);
+    expect(summary.replace("…", "").split(" ")).toHaveLength(53);
+    expect(summary.replace("…", "").split(" ").every((word) => word === "ab")).toBe(true);
+  });
+
+  it("falls back to a hard cut when the summary has no spaces", () => {
+    const xml = wrap(
+      `<item><title>Long</title><link>https://example.com/long</link>` +
+        `<description>${"a".repeat(200)}</description></item>`
+    );
+
+    const items = parseRssItems(xml, "Cointelegraph");
+
+    expect(items[0].summary).toBe(`${"a".repeat(160)}…`);
+  });
+
+  it("leaves summaries of 160 characters or fewer unchanged", () => {
+    const xml = wrap(
+      `<item><title>Exact</title><link>https://example.com/exact</link>` +
+        `<description>${"b".repeat(160)}</description></item>`
+    );
+
+    const items = parseRssItems(xml, "Cointelegraph");
+
+    expect(items[0].summary).toBe("b".repeat(160));
   });
 
   it("skips items without a link or without a title", () => {
