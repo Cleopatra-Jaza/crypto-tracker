@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Alert" ADD COLUMN "emailedAt" TIMESTAMP(3),
+ADD COLUMN "notifyEmail" BOOLEAN NOT NULL DEFAULT false;
