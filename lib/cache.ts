@@ -6,20 +6,38 @@ const REDIS_TIMEOUT_MS = 1500;
 
 // undefined = not resolved yet, null = unavailable (missing env or init failed)
 let client: Redis | null | undefined;
+// Set when client creation failed, so we never retry it on every request.
+let disabled = false;
+
+function cleanEnvValue(value: string | undefined): string | null {
+  if (typeof value !== "string") return null;
+  let out = value.trim();
+  // Drop a single pair of surrounding quotes, then trim again.
+  if (out.length >= 2) {
+    const first = out[0];
+    const last = out[out.length - 1];
+    if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
+      out = out.slice(1, -1).trim();
+    }
+  }
+  return out.length > 0 ? out : null;
+}
 
 function getClient(): Redis | null {
   if (client !== undefined) return client;
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (
-    typeof url === "string" &&
-    url.length > 0 &&
-    typeof token === "string" &&
-    token.length > 0
-  ) {
-    client = new Redis({ url, token });
-  } else {
+  if (disabled) return null;
+  const url = cleanEnvValue(process.env.UPSTASH_REDIS_REST_URL);
+  const token = cleanEnvValue(process.env.UPSTASH_REDIS_REST_TOKEN);
+  if (!url || !token) {
     client = null;
+    return client;
+  }
+  try {
+    client = new Redis({ url, token });
+  } catch (err) {
+    console.warn("[cache] Redis disabled:", err);
+    client = null;
+    disabled = true;
   }
   return client;
 }
@@ -55,9 +73,9 @@ function parseEntry<T>(raw: unknown): SharedEntry<T> | null {
 export async function getSharedCache<T>(
   key: string
 ): Promise<{ data: T; fetchedAt: number } | null> {
-  const redis = getClient();
-  if (!redis) return null;
   try {
+    const redis = getClient();
+    if (!redis) return null;
     const raw = await withTimeout(redis.get<unknown>(key));
     return parseEntry<T>(raw);
   } catch (err) {
@@ -71,11 +89,15 @@ export async function setSharedCache<T>(
   data: T,
   maxAgeSeconds: number
 ): Promise<void> {
-  const redis = getClient();
-  if (!redis) return;
   try {
+    const redis = getClient();
+    if (!redis) return;
     const entry: SharedEntry<T> = { data, fetchedAt: Date.now() };
-    await withTimeout(redis.set(key, JSON.stringify(entry), { ex: maxAgeSeconds }));
+    await withTimeout(
+      redis.set(key, JSON.stringify(entry), { ex: maxAgeSeconds })
+    ).catch((err) => {
+      console.warn("[cache]", err);
+    });
   } catch (err) {
     console.warn("[cache]", err);
   }
