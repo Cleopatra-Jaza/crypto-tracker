@@ -165,7 +165,7 @@ export default function AlertsView() {
     <main className="mx-auto max-w-4xl w-full min-w-0 px-4 py-6 pb-24 md:px-6 md:py-6 md:pb-0">
       <h1 className="mb-2 text-xl font-medium md:mb-4 md:text-3xl md:font-bold">Price alerts</h1>
       <p className="mb-4 text-xs text-[var(--muted)] md:text-sm">
-        Alerts are checked every minute while this site is open in a browser tab, and email alerts are also checked every few minutes in the background. All prices are in USD.
+        Alerts are checked every minute while this site is open in a browser tab. Email alerts are also checked in the background about every 15 minutes, so the email can arrive a little late. All prices are in USD.
       </p>
 
       <div className="mb-4 grid grid-cols-1 gap-2 md:flex md:flex-wrap md:items-center">
