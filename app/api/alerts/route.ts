@@ -10,6 +10,7 @@ function serialize(a: {
   direction: string;
   triggeredAt: Date | null;
   createdAt: Date;
+  notifyEmail: boolean;
 }) {
   return {
     id: a.id,
@@ -19,6 +20,7 @@ function serialize(a: {
     direction: a.direction,
     triggeredAt: a.triggeredAt ? a.triggeredAt.toISOString() : null,
     createdAt: a.createdAt.toISOString(),
+    notifyEmail: a.notifyEmail,
   };
 }
 
@@ -51,12 +53,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { coinId, coinName, targetPrice, direction } = (body ?? {}) as {
+  const { coinId, coinName, targetPrice, direction, notifyEmail } = (body ?? {}) as {
     coinId?: unknown;
     coinName?: unknown;
     targetPrice?: unknown;
     direction?: unknown;
+    notifyEmail?: unknown;
   };
+
+  const notifyEmailValue = notifyEmail === undefined ? false : notifyEmail;
+  if (typeof notifyEmailValue !== "boolean") {
+    return NextResponse.json(
+      { error: "notifyEmail must be true or false" },
+      { status: 400 }
+    );
+  }
 
   if (typeof coinId !== "string" || coinId.length === 0 || coinId.length > 100 || !/^[a-z0-9-]+$/.test(coinId)) {
     return NextResponse.json(
@@ -90,6 +101,26 @@ export async function POST(req: Request) {
     if (activeCount >= 20) {
       return NextResponse.json({ error: "Maximum 20 active alerts" }, { status: 400 });
     }
+
+    if (notifyEmailValue === true) {
+      const user = await db.user.findUnique({
+        where: { id: session.user.id },
+        select: { email: true },
+      });
+      if (!user || typeof user.email !== "string" || user.email.trim().length === 0) {
+        return NextResponse.json(
+          { error: "Your account has no email address, so email alerts are not available" },
+          { status: 400 }
+        );
+      }
+      const emailAlertCount = await db.alert.count({
+        where: { userId: session.user.id, triggeredAt: null, notifyEmail: true },
+      });
+      if (emailAlertCount >= 10) {
+        return NextResponse.json({ error: "Maximum 10 active email alerts" }, { status: 400 });
+      }
+    }
+
     const alert = await db.alert.create({
       data: {
         userId: session.user.id,
@@ -97,6 +128,7 @@ export async function POST(req: Request) {
         coinName,
         targetPrice,
         direction,
+        notifyEmail: notifyEmailValue,
       },
     });
     return NextResponse.json(serialize(alert), { status: 201 });
