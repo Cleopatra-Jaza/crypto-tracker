@@ -57,7 +57,7 @@ export default function Home() {
 
   const { prices: livePrices, status: liveStatus } = useLivePrices(
     coins,
-    currency === "USD"
+    currency.toLowerCase() === "usd"
   );
 
   const displayCoins = useMemo(() => {
@@ -341,7 +341,7 @@ export default function Home() {
     <main className="mx-auto max-w-4xl w-full min-w-0 px-4 py-6 md:px-6">
       <div className="mb-4 flex items-center gap-3">
         <h1 className="text-3xl font-bold">Crypto Tracker</h1>
-        {liveStatus === "live" && currency === "USD" && (
+        {liveStatus === "live" && currency.toLowerCase() === "usd" && (
           <span
             className="inline-flex items-center gap-2 rounded-full border border-green-500/30 bg-green-500/10 px-2.5 py-1 text-xs font-medium text-green-700 dark:text-green-400"
             title="Live prices from Binance"
