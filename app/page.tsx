@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useCurrency } from "@/lib/useCurrency";
 import { formatCompactMoney, formatMoney } from "@/lib/currency";
+import { useLivePrices } from "@/lib/useLivePrices";
 import MarketOverview from "@/components/MarketOverview";
 import MobileCoinList from "@/components/MobileCoinList";
 
@@ -54,6 +55,22 @@ export default function Home() {
   const [sortKey, setSortKey] = useState<SortKey>("market_cap");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
+  const { prices: livePrices, status: liveStatus } = useLivePrices(
+    coins,
+    currency === "USD"
+  );
+
+  const displayCoins = useMemo(() => {
+    if (liveStatus !== "live") return coins;
+    return coins.map((coin) => {
+      const livePrice = livePrices[coin.id];
+      if (typeof livePrice === "number") {
+        return { ...coin, current_price: livePrice };
+      }
+      return coin;
+    });
+  }, [coins, livePrices, liveStatus]);
+
   const prevPricesRef = useRef<Record<string, number>>({});
   const timeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const prevCurrencyRef = useRef<string>(currency);
@@ -76,7 +93,7 @@ export default function Home() {
     const prev = prevPricesRef.current;
     const newFlash: Record<string, "up" | "down"> = {};
     let hasFlash = false;
-    coins.forEach((c) => {
+    displayCoins.forEach((c) => {
       const p = prev[c.id];
       if (p !== undefined && p !== c.current_price) {
         newFlash[c.id] = c.current_price > p ? "up" : "down";
@@ -85,7 +102,7 @@ export default function Home() {
     });
 
     const next: Record<string, number> = {};
-    coins.forEach((c) => {
+    displayCoins.forEach((c) => {
       next[c.id] = c.current_price;
     });
     prevPricesRef.current = next;
@@ -108,7 +125,7 @@ export default function Home() {
         delete timeoutsRef.current[id];
       }, 1000);
     });
-  }, [coins]);
+  }, [displayCoins]);
 
   useEffect(() => {
     return () => {
@@ -293,7 +310,7 @@ export default function Home() {
     }
   }
 
-  const filtered = coins.filter((c) => {
+  const filtered = displayCoins.filter((c) => {
     const matchSearch =
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.symbol.toLowerCase().includes(search.toLowerCase());
@@ -322,9 +339,24 @@ export default function Home() {
 
   return (
     <main className="mx-auto max-w-4xl w-full min-w-0 px-4 py-6 md:px-6">
-      <h1 className="mb-4 text-3xl font-bold">Crypto Tracker</h1>
+      <div className="mb-4 flex items-center gap-3">
+        <h1 className="text-3xl font-bold">Crypto Tracker</h1>
+        {liveStatus === "live" && currency === "USD" && (
+          <span
+            className="inline-flex items-center gap-2 rounded-full border border-green-500/30 bg-green-500/10 px-2.5 py-1 text-xs font-medium text-green-700 dark:text-green-400"
+            title="Live prices from Binance"
+            aria-label="Live prices from Binance"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+            </span>
+            Live
+          </span>
+        )}
+      </div>
 
-      <MarketOverview coins={coins} currency={currency} />
+      <MarketOverview coins={displayCoins} currency={currency} />
 
       <div className="mb-4 flex gap-2">
         <button
@@ -587,7 +619,7 @@ export default function Home() {
           ) : (
             <ul className="space-y-1">
               {searchResults
-                .filter((r) => !coins.some((c) => c.id === r.id))
+                .filter((r) => !displayCoins.some((c) => c.id === r.id))
                 .map((r) => (
                   <li key={r.id} className="p-3 border-b border-[var(--card-border)] flex items-center gap-3">
                     <Link href={`/coin/${r.id}`} className="flex items-center gap-3">
