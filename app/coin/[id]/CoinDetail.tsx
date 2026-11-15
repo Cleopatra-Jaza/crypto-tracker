@@ -16,6 +16,7 @@ import {
   ColorType,
   UTCTimestamp,
   LineStyle,
+  type IChartApi,
 } from "lightweight-charts";
 
 type RangeKey = "1h" | "1d" | "7d" | "30d" | "90d" | "1y" | "all";
@@ -60,6 +61,7 @@ type ChartData =
 
 export default function CoinDetail({ id }: { id: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<IChartApi | null>(null);
   const mainSeriesRef = useRef<{ update: (bar: unknown) => void } | null>(null);
   const lastBarRef = useRef<
     | { time: number; value: number }
@@ -311,6 +313,7 @@ export default function CoinDetail({ id }: { id: string }) {
             : { timeVisible: range === "1d" || range === "7d" }),
       },
     });
+    chartRef.current = chart;
 
     // Close prices for indicators
     let closes: Point[] = [];
@@ -521,6 +524,7 @@ export default function CoinDetail({ id }: { id: string }) {
     setIndicatorHint(hints.length > 0 ? `Not enough data for this range: ${hints.join(", ")}` : "");
     chart.timeScale().fitContent();
     return () => {
+      chartRef.current = null;
       mainSeriesRef.current = null;
       lastBarRef.current = null;
       chart.remove();
@@ -545,11 +549,13 @@ export default function CoinDetail({ id }: { id: string }) {
     const series = mainSeriesRef.current;
     const last = lastBarRef.current;
 
-    const applyUpdate = (bar: unknown) => {
+    const applyUpdate = (bar: unknown): boolean => {
       try {
         series.update(bar as never);
-      } catch {
-        // ignore update errors (e.g. invalid/out-of-order time)
+        return true;
+      } catch (err) {
+        console.warn("[live-chart]", err);
+        return false;
       }
     };
 
@@ -560,8 +566,10 @@ export default function CoinDetail({ id }: { id: string }) {
       if (bucket > last.time) {
         if (chartType === "line") {
           const next = { time: bucket as UTCTimestamp, value: displayPrice };
-          applyUpdate(next);
-          lastBarRef.current = { time: bucket, value: displayPrice };
+          if (applyUpdate(next)) {
+            lastBarRef.current = { time: bucket, value: displayPrice };
+            chartRef.current?.timeScale().scrollToRealTime();
+          }
         } else {
           const prevClose =
             "close" in last && typeof last.close === "number" ? last.close : displayPrice;
@@ -572,21 +580,24 @@ export default function CoinDetail({ id }: { id: string }) {
             low: displayPrice,
             close: displayPrice,
           };
-          applyUpdate(next);
-          lastBarRef.current = {
-            time: bucket,
-            open: prevClose,
-            high: displayPrice,
-            low: displayPrice,
-            close: displayPrice,
-          };
+          if (applyUpdate(next)) {
+            lastBarRef.current = {
+              time: bucket,
+              open: prevClose,
+              high: displayPrice,
+              low: displayPrice,
+              close: displayPrice,
+            };
+            chartRef.current?.timeScale().scrollToRealTime();
+          }
         }
       } else {
         // bucket === last.time
         if (chartType === "line") {
           const next = { time: last.time as UTCTimestamp, value: displayPrice };
-          applyUpdate(next);
-          lastBarRef.current = { time: last.time, value: displayPrice };
+          if (applyUpdate(next)) {
+            lastBarRef.current = { time: last.time, value: displayPrice };
+          }
         } else if ("open" in last) {
           const next = {
             time: last.time as UTCTimestamp,
@@ -595,14 +606,15 @@ export default function CoinDetail({ id }: { id: string }) {
             low: Math.min(last.low, displayPrice),
             close: displayPrice,
           };
-          applyUpdate(next);
-          lastBarRef.current = {
-            time: last.time,
-            open: last.open,
-            high: Math.max(last.high, displayPrice),
-            low: Math.min(last.low, displayPrice),
-            close: displayPrice,
-          };
+          if (applyUpdate(next)) {
+            lastBarRef.current = {
+              time: last.time,
+              open: last.open,
+              high: Math.max(last.high, displayPrice),
+              low: Math.min(last.low, displayPrice),
+              close: displayPrice,
+            };
+          }
         }
       }
       return;
@@ -612,8 +624,9 @@ export default function CoinDetail({ id }: { id: string }) {
       // Weekly bars: update existing last bar only, never append
       if (chartType === "line") {
         const next = { time: last.time as UTCTimestamp, value: displayPrice };
-        applyUpdate(next);
-        lastBarRef.current = { time: last.time, value: displayPrice };
+        if (applyUpdate(next)) {
+          lastBarRef.current = { time: last.time, value: displayPrice };
+        }
       } else if ("open" in last) {
         const next = {
           time: last.time as UTCTimestamp,
@@ -622,17 +635,18 @@ export default function CoinDetail({ id }: { id: string }) {
           low: Math.min(last.low, displayPrice),
           close: displayPrice,
         };
-        applyUpdate(next);
-        lastBarRef.current = {
-          time: last.time,
-          open: last.open,
-          high: Math.max(last.high, displayPrice),
-          low: Math.min(last.low, displayPrice),
-          close: displayPrice,
-        };
+        if (applyUpdate(next)) {
+          lastBarRef.current = {
+            time: last.time,
+            open: last.open,
+            high: Math.max(last.high, displayPrice),
+            low: Math.min(last.low, displayPrice),
+            close: displayPrice,
+          };
+        }
       }
     }
-  }, [displayPrice, liveStatus, range, chartType]);
+  }, [displayPrice, liveStatus, range, chartType, chartData]);
 
   const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 2 });
 
