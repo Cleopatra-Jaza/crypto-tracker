@@ -60,6 +60,12 @@ type ChartData =
 
 export default function CoinDetail({ id }: { id: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const mainSeriesRef = useRef<{ update: (bar: unknown) => void } | null>(null);
+  const lastBarRef = useRef<
+    | { time: number; value: number }
+    | { time: number; open: number; high: number; low: number; close: number }
+    | null
+  >(null);
   const [currency] = useCurrency();
   const isDark = useIsDark();
   const [range, setRange] = useState<RangeKey>("7d");
@@ -346,6 +352,9 @@ export default function CoinDetail({ id }: { id: string }) {
       series.setData(
         closes.map((p) => ({ time: p.time as UTCTimestamp, value: p.value }))
       );
+      const last = closes[closes.length - 1];
+      mainSeriesRef.current = series as { update: (bar: unknown) => void };
+      lastBarRef.current = last ? { time: last.time, value: last.value } : null;
     } else {
       const series = chart.addSeries(CandlestickSeries, {
         upColor: "#22c55e",
@@ -370,6 +379,17 @@ export default function CoinDetail({ id }: { id: string }) {
           return true;
         });
       series.setData(data);
+      const last = data[data.length - 1];
+      mainSeriesRef.current = series as { update: (bar: unknown) => void };
+      lastBarRef.current = last
+        ? {
+            time: last.time as number,
+            open: last.open,
+            high: last.high,
+            low: last.low,
+            close: last.close,
+          }
+        : null;
     }
 
     // SMA overlays on main pane
@@ -500,8 +520,119 @@ export default function CoinDetail({ id }: { id: string }) {
 
     setIndicatorHint(hints.length > 0 ? `Not enough data for this range: ${hints.join(", ")}` : "");
     chart.timeScale().fitContent();
-    return () => chart.remove();
+    return () => {
+      mainSeriesRef.current = null;
+      lastBarRef.current = null;
+      chart.remove();
+    };
   }, [chartData, range, currency, chartType, chartKey, showSMA20, showSMA50, showRSI, showMACD, displayCurrency, isDark]);
+
+  // Live last-bar update for Binance USD ranges (1H/All) only
+  useEffect(() => {
+    const isBinanceRangeNow = range === "1h" || range === "all";
+    if (
+      liveStatus !== "live" ||
+      typeof displayPrice !== "number" ||
+      !Number.isFinite(displayPrice) ||
+      displayPrice <= 0 ||
+      !isBinanceRangeNow ||
+      !mainSeriesRef.current ||
+      !lastBarRef.current
+    ) {
+      return;
+    }
+
+    const series = mainSeriesRef.current;
+    const last = lastBarRef.current;
+
+    const applyUpdate = (bar: unknown) => {
+      try {
+        series.update(bar as never);
+      } catch {
+        // ignore update errors (e.g. invalid/out-of-order time)
+      }
+    };
+
+    if (range === "1h") {
+      const bucket = Math.floor(Date.now() / 1000 / 60) * 60;
+      if (bucket < last.time) return;
+
+      if (bucket > last.time) {
+        if (chartType === "line") {
+          const next = { time: bucket as UTCTimestamp, value: displayPrice };
+          applyUpdate(next);
+          lastBarRef.current = { time: bucket, value: displayPrice };
+        } else {
+          const prevClose =
+            "close" in last && typeof last.close === "number" ? last.close : displayPrice;
+          const next = {
+            time: bucket as UTCTimestamp,
+            open: prevClose,
+            high: displayPrice,
+            low: displayPrice,
+            close: displayPrice,
+          };
+          applyUpdate(next);
+          lastBarRef.current = {
+            time: bucket,
+            open: prevClose,
+            high: displayPrice,
+            low: displayPrice,
+            close: displayPrice,
+          };
+        }
+      } else {
+        // bucket === last.time
+        if (chartType === "line") {
+          const next = { time: last.time as UTCTimestamp, value: displayPrice };
+          applyUpdate(next);
+          lastBarRef.current = { time: last.time, value: displayPrice };
+        } else if ("open" in last) {
+          const next = {
+            time: last.time as UTCTimestamp,
+            open: last.open,
+            high: Math.max(last.high, displayPrice),
+            low: Math.min(last.low, displayPrice),
+            close: displayPrice,
+          };
+          applyUpdate(next);
+          lastBarRef.current = {
+            time: last.time,
+            open: last.open,
+            high: Math.max(last.high, displayPrice),
+            low: Math.min(last.low, displayPrice),
+            close: displayPrice,
+          };
+        }
+      }
+      return;
+    }
+
+    if (range === "all") {
+      // Weekly bars: update existing last bar only, never append
+      if (chartType === "line") {
+        const next = { time: last.time as UTCTimestamp, value: displayPrice };
+        applyUpdate(next);
+        lastBarRef.current = { time: last.time, value: displayPrice };
+      } else if ("open" in last) {
+        const next = {
+          time: last.time as UTCTimestamp,
+          open: last.open,
+          high: Math.max(last.high, displayPrice),
+          low: Math.min(last.low, displayPrice),
+          close: displayPrice,
+        };
+        applyUpdate(next);
+        lastBarRef.current = {
+          time: last.time,
+          open: last.open,
+          high: Math.max(last.high, displayPrice),
+          low: Math.min(last.low, displayPrice),
+          close: displayPrice,
+        };
+      }
+    }
+  }, [displayPrice, liveStatus, range, chartType]);
 
   const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 2 });
 
