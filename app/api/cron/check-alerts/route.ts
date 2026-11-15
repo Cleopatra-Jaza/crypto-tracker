@@ -6,7 +6,6 @@ import { buildAlertEmail, chunk, isAlertDue } from "@/lib/alertEmail";
 import { isAuthorized } from "@/lib/cronAuth";
 
 async function handler(request: Request) {
-  const start = Date.now();
   try {
     const secret = process.env.CRON_SECRET;
     if (!secret || secret.trim().length < 16) {
@@ -16,6 +15,7 @@ async function handler(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const start = Date.now();
     const startOfUtcDay = new Date();
     startOfUtcDay.setUTCHours(0, 0, 0, 0);
     const dailyCount = await db.alert.count({
