@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useCurrency } from "@/lib/useCurrency";
 import useIsDark from "@/lib/useTheme";
 import { formatMoney, formatCompactMoney } from "@/lib/currency";
 import { sma, rsi, macd, type Point } from "@/lib/indicators";
+import { useLivePrices } from "@/lib/useLivePrices";
 import {
   createChart,
   AreaSeries,
@@ -111,6 +112,29 @@ export default function CoinDetail({ id }: { id: string }) {
     details.rank <= 300 &&
     typeof details?.symbol === "string" &&
     details.symbol.length > 0;
+
+  const liveCoins = useMemo(() => {
+    if (!detailsLoaded || !details) return [];
+    return [
+      {
+        id,
+        symbol: details.symbol ?? "",
+        market_cap_rank: details.rank,
+      },
+    ];
+  }, [detailsLoaded, details, id]);
+
+  const { prices: livePrices, status: liveStatus } = useLivePrices(
+    liveCoins,
+    currency.toLowerCase() === "usd"
+  );
+
+  const displayPrice = useMemo(() => {
+    if (liveStatus === "live" && typeof livePrices[id] === "number") {
+      return livePrices[id];
+    }
+    return details?.price ?? null;
+  }, [liveStatus, livePrices, id, details?.price]);
 
   // Chart data load
   useEffect(() => {
@@ -517,9 +541,24 @@ export default function CoinDetail({ id }: { id: string }) {
             <div className="h-10 w-10 shrink-0 rounded bg-[var(--skeleton)] animate-pulse md:h-12 md:w-12" />
           )}
           <div className="min-w-0">
-            <h1 className="truncate text-xl font-medium md:text-3xl md:font-bold">
-              {details?.name ?? (chartLoading ? <span className="animate-pulse" /> : id)}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="truncate text-xl font-medium md:text-3xl md:font-bold">
+                {details?.name ?? (chartLoading ? <span className="animate-pulse" /> : id)}
+              </h1>
+              {liveStatus === "live" && (
+                <span
+                  className="inline-flex items-center gap-2 rounded-full border border-green-500/30 bg-green-500/10 px-2.5 py-1 text-xs font-medium text-green-700 dark:text-green-400"
+                  title="Live prices from Binance"
+                  aria-label="Live prices from Binance"
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+                  </span>
+                  Live
+                </span>
+              )}
+            </div>
             <p className="truncate text-xs uppercase text-[var(--muted)] md:text-sm">
               {details?.symbol?.toUpperCase() ?? ""}
               {details?.rank != null && (
@@ -528,12 +567,12 @@ export default function CoinDetail({ id }: { id: string }) {
             </p>
           </div>
         </div>
-        {details?.price != null && (
+        {displayPrice != null && (
           <div className="flex items-baseline gap-2 md:hidden">
             <span className="text-3xl font-medium tabular-nums">
-              {formatMoney(details.price, displayCurrency)}
+              {formatMoney(displayPrice, displayCurrency)}
             </span>
-            {details.change24h != null && (
+            {details?.change24h != null && (
               <span
                 className={`text-sm font-medium ${
                   details.change24h >= 0 ? "text-green-700 dark:text-green-500" : "text-red-700 dark:text-red-500"
