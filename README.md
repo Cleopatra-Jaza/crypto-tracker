@@ -10,6 +10,7 @@ Real-time cryptocurrency tracker built with Next.js.
 
 - **Market**
   - Live prices for the top 50 coins with sorting and market cap, volume, 7d, and 30d columns
+  - Live USD prices over a Binance public WebSocket (market page, portfolio page and coin page header), with a green "Live" indicator
   - Fear & Greed Index
   - Trending coins
   - Top gainers and losers
@@ -38,7 +39,16 @@ Real-time cryptocurrency tracker built with Next.js.
 
 ## Tech stack
 
-Next.js (App Router), TypeScript, Tailwind CSS, Lightweight Charts, Auth.js, Prisma 7, PostgreSQL (Neon), Vercel, CoinGecko API, alternative.me Fear & Greed API.
+Next.js (App Router), TypeScript, Tailwind CSS, Lightweight Charts, Auth.js, Prisma 7, PostgreSQL (Neon), Vercel, CoinGecko API, alternative.me Fear & Greed API, Binance WebSocket (live USD prices).
+
+## Live prices
+
+- One browser WebSocket connection to Binance public market data (`data-stream.binance.vision`, miniTicker streams, no API key).
+- Only coins with market cap rank <= 300 are subscribed, USD only; other currencies keep using the 60-second polling.
+- Updates are buffered and flushed to React state every 2 seconds (throttling) to avoid too many re-renders.
+- Automatic reconnect with exponential backoff (1s up to 30s); the socket pauses when the browser tab is hidden and resumes when visible.
+- The 60-second CoinGecko polling stays as the fallback, so the app still works if the WebSocket is blocked.
+- The logic lives in one reusable hook, `lib/useLivePrices.ts`, used by the market page, portfolio page and coin page header. The coin chart itself is not live yet.
 
 ## How it works
 
