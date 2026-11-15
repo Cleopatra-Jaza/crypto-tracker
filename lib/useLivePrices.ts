@@ -16,7 +16,7 @@ type StreamInfo = {
   symbolToId: Record<string, string>;
 };
 
-function buildStreamInfo(coins: LiveCoin[]): StreamInfo {
+export function buildStreamInfo(coins: LiveCoin[]): StreamInfo {
   // Only coins with rank not null and <= 300
   const eligible = coins.filter(
     (c) => c.market_cap_rank != null && c.market_cap_rank <= 300 && c.symbol
