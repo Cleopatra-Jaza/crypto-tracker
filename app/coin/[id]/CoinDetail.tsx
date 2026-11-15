@@ -122,7 +122,7 @@ export default function CoinDetail({ id }: { id: string }) {
         market_cap_rank: details.rank,
       },
     ];
-  }, [detailsLoaded, details, id]);
+  }, [detailsLoaded, details?.symbol, details?.rank, id]);
 
   const { prices: livePrices, status: liveStatus } = useLivePrices(
     liveCoins,
@@ -135,6 +135,33 @@ export default function CoinDetail({ id }: { id: string }) {
     }
     return details?.price ?? null;
   }, [liveStatus, livePrices, id, details?.price]);
+
+  const prevDisplayPriceRef = useRef<number | null>(null);
+  const priceFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [priceFlash, setPriceFlash] = useState<"up" | "down" | null>(null);
+
+  useEffect(() => {
+    const prev = prevDisplayPriceRef.current;
+    if (displayPrice == null) {
+      prevDisplayPriceRef.current = null;
+      return;
+    }
+    if (prev != null && prev !== displayPrice) {
+      if (priceFlashTimeoutRef.current) clearTimeout(priceFlashTimeoutRef.current);
+      setPriceFlash(displayPrice > prev ? "up" : "down");
+      priceFlashTimeoutRef.current = setTimeout(() => {
+        setPriceFlash(null);
+        priceFlashTimeoutRef.current = null;
+      }, 1000);
+    }
+    prevDisplayPriceRef.current = displayPrice;
+  }, [displayPrice]);
+
+  useEffect(() => {
+    return () => {
+      if (priceFlashTimeoutRef.current) clearTimeout(priceFlashTimeoutRef.current);
+    };
+  }, []);
 
   // Chart data load
   useEffect(() => {
@@ -568,8 +595,16 @@ export default function CoinDetail({ id }: { id: string }) {
           </div>
         </div>
         {displayPrice != null && (
-          <div className="flex items-baseline gap-2 md:hidden">
-            <span className="text-3xl font-medium tabular-nums">
+          <div className="flex items-baseline gap-2">
+            <span
+              className={`rounded px-1 text-3xl font-medium tabular-nums transition-colors duration-500 ${
+                priceFlash === "up"
+                  ? "bg-green-500/20 text-green-700 dark:text-green-500"
+                  : priceFlash === "down"
+                  ? "bg-red-500/20 text-red-700 dark:text-red-500"
+                  : ""
+              }`}
+            >
               {formatMoney(displayPrice, displayCurrency)}
             </span>
             {details?.change24h != null && (
