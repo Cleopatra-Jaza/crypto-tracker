@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { evaluateAlert, escapeHtml, buildAlertEmail } from "./alertEmail";
+import {
+  evaluateAlert,
+  escapeHtml,
+  buildAlertEmail,
+  isAlertDue,
+  chunk,
+} from "./alertEmail";
 
 describe("evaluateAlert", () => {
   it("triggers at equal value for both directions", () => {
@@ -96,5 +102,79 @@ describe("buildAlertEmail", () => {
     });
     expect(result.subject.startsWith("A".repeat(60))).toBe(true);
     expect(result.subject).not.toContain("A".repeat(61));
+  });
+});
+
+describe("isAlertDue", () => {
+  it("returns true when already triggered", () => {
+    expect(
+      isAlertDue(
+        { triggeredAt: new Date(), direction: "above", targetPrice: 100 },
+        50
+      )
+    ).toBe(true);
+  });
+
+  it("returns true when not triggered and hit", () => {
+    expect(
+      isAlertDue(
+        { triggeredAt: null, direction: "above", targetPrice: 100 },
+        100
+      )
+    ).toBe(true);
+    expect(
+      isAlertDue(
+        { triggeredAt: null, direction: "below", targetPrice: 100 },
+        99
+      )
+    ).toBe(true);
+  });
+
+  it("returns false when not triggered and not hit", () => {
+    expect(
+      isAlertDue(
+        { triggeredAt: null, direction: "above", targetPrice: 100 },
+        99
+      )
+    ).toBe(false);
+    expect(
+      isAlertDue(
+        { triggeredAt: null, direction: "below", targetPrice: 100 },
+        101
+      )
+    ).toBe(false);
+  });
+
+  it("returns false for invalid price", () => {
+    expect(
+      isAlertDue(
+        { triggeredAt: null, direction: "above", targetPrice: 100 },
+        NaN
+      )
+    ).toBe(false);
+    expect(
+      isAlertDue(
+        { triggeredAt: null, direction: "above", targetPrice: NaN },
+        100
+      )
+    ).toBe(false);
+  });
+});
+
+describe("chunk", () => {
+  it("splits exact multiple", () => {
+    expect(chunk([1, 2, 3, 4], 2)).toEqual([[1, 2], [3, 4]]);
+  });
+
+  it("handles remainder", () => {
+    expect(chunk([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]]);
+  });
+
+  it("handles empty array", () => {
+    expect(chunk([], 2)).toEqual([]);
+  });
+
+  it("returns [] for size 0", () => {
+    expect(chunk([1, 2, 3], 0)).toEqual([]);
   });
 });

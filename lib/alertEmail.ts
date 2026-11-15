@@ -46,3 +46,24 @@ export function buildAlertEmail(input: {
 
   return { subject, text, html };
 }
+
+export function isAlertDue(
+  alert: { triggeredAt: Date | null; direction: string; targetPrice: number },
+  currentPrice: number
+): boolean {
+  if (alert.triggeredAt !== null) {
+    return true;
+  }
+  return evaluateAlert(alert.direction, alert.targetPrice, currentPrice);
+}
+
+export function chunk<T>(items: T[], size: number): T[][] {
+  if (size < 1) {
+    return [];
+  }
+  const result: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    result.push(items.slice(i, i + size));
+  }
+  return result;
+}
