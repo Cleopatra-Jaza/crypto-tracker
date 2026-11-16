@@ -9,6 +9,7 @@ import CurrencySelect from "@/components/CurrencySelect";
 import ThemeToggle from "@/components/ThemeToggle";
 import AlertChecker from "@/components/AlertChecker";
 import BottomNav from "@/components/BottomNav";
+import Logo from "@/components/Logo";
 import { SITE } from "@/lib/site";
 
 const geistSans = Geist({
@@ -63,8 +64,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
       <header className="relative flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-[var(--card-border)] px-4 py-3 md:flex-nowrap md:items-center md:justify-between md:py-2">
         <div className="flex min-w-0 items-center gap-2 md:gap-4">
-          <Link href="/" className="truncate text-base font-medium md:font-normal">
-            Crypto Tracker
+          <Link href="/" className="flex min-w-0 items-center gap-2 truncate text-base font-medium md:font-normal">
+            <Logo size={28} aria-hidden />
+            <span className="truncate">Crypto Tracker</span>
           </Link>
           <nav className="hidden md:flex items-center gap-4">
             <Link href="/portfolio">Portfolio</Link>
