@@ -56,6 +56,26 @@ export default function PrivacyPage() {
           <p className="mt-2">
             This data is stored in our database. Nothing is public and nothing is shared with other users.
           </p>
+          <p className="mt-2">
+            When you create a price alert you can tick &quot;Also email me&quot;. We store that choice with the alert (together with the coin, the target price and the direction), and the time the alert email was sent.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-base font-semibold">Email alerts</h2>
+          <p className="mt-2">
+            If you turn on email for an alert, we send one email to the email address of your sign-in account when the price target is reached. We send it through the email service Brevo, which receives your email address and the content of the message only to deliver it.
+          </p>
+          <p className="mt-2">
+            The message contains the coin, the target price, the current price and a link to our site. We do not add tracking links or images ourselves, and we never use your address for newsletters or marketing.
+          </p>
+          <p className="mt-2">
+            Because we send from a free shared address, the message may land in your spam folder, please mark it as not spam. Deleting the alert or choosing not to tick the option stops emails for that alert. To stop all emails or delete your data, write to{" "}
+            <a className="underline" href={`mailto:${SITE.contactEmail}`}>
+              {SITE.contactEmail}
+            </a>
+            .
+          </p>
         </section>
 
         <section>
@@ -75,6 +95,11 @@ export default function PrivacyPage() {
             <li>
               <strong>Market data:</strong> fetched from CoinGecko, alternative.me (Fear and Greed index), and Binance public market data.
               These requests are made without your personal data.
+            </li>
+            <li><strong>Email delivery:</strong> Brevo, only if you use email alerts.</li>
+            <li><strong>Cache:</strong> Upstash, a cache for public market data such as the coin list; it does not contain personal data.</li>
+            <li>
+              <strong>News:</strong> news headlines are fetched on our server from the public RSS feeds of Cointelegraph and CoinDesk; your personal data is not sent with those requests; links open the publisher&apos;s own site, which has its own privacy policy.
             </li>
           </ul>
         </section>

@@ -57,8 +57,11 @@ export default function TermsPage() {
         <section>
           <h2 className="text-base font-semibold">Third-party data and services</h2>
           <p className="mt-2">
-            The app relies on third-party data and services, including CoinGecko, Binance, alternative.me, GitHub, Google, Vercel, and Neon.
+            The app relies on third-party data and services, including CoinGecko, Binance, alternative.me, Brevo (email delivery), Upstash (cache), GitHub, Google, Vercel, Neon, and the news publishers Cointelegraph and CoinDesk.
             We do not control them, and their availability or accuracy is not guaranteed.
+          </p>
+          <p className="mt-2">
+            Email alerts are sent on a best-effort basis; they can be delayed, can arrive in the spam folder, or may not arrive at all, so do not rely on them for time-critical decisions.
           </p>
         </section>
 
