@@ -54,7 +54,7 @@ Real-time cryptocurrency tracker built with Next.js.
 
 - The alert form includes an **"Also email me"** option when creating a price alert.
 - A secured server route (`/api/cron/check-alerts`, protected by a secret bearer token) is called by a free external scheduler (cron-job.org) about every 15 minutes. (Vercel Hobby cron runs only once a day.)
-- Each run makes price requests for due coins, checks alerts, claims each alert atomically in the database so an alert is never emailed twice, and sends messages through Brevo.
+- Each run fetches prices (in batches of up to 50 coins, at most 2 batches) for the coins of the pending email alerts, checks which alerts are due, claims each alert atomically in the database so an alert is never emailed twice, and sends messages through Brevo.
 - Limits enforced in code: up to 25 email attempts per run, up to 250 emails per UTC day, and at most 10 active email alerts per user (with at most 20 active alerts total per user).
 - **Limitations:** without a custom domain, emails are sent from a free shared sender and can land in the spam folder; checks run about every ~15 minutes so emails can arrive late (this also helps keep the free Neon database within its monthly compute allowance). Email delivery is best effort.
 
